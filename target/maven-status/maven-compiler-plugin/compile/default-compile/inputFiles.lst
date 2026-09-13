@@ -18,7 +18,12 @@ C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory
 C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\service\InventoryService.java
 C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\service\OrderService.java
 C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\ui\CartLine.java
+C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\ui\CategoryManagerDialog.java
 C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\ui\CheckoutView.java
 C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\ui\DashboardView.java
 C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\ui\InventoryView.java
 C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\ui\ItemFormDialog.java
+C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\ui\OrdersView.java
+C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\ui\ThumbnailCell.java
+C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\util\ImageStorage.java
+C:\Users\PJ\Documents\inventory-system\src\main\java\com\clothingstore\inventory\util\ThumbnailCell.java

@@ -6,6 +6,7 @@ import com.clothingstore.inventory.service.OrderService;
 import com.clothingstore.inventory.ui.CheckoutView;
 import com.clothingstore.inventory.ui.DashboardView;
 import com.clothingstore.inventory.ui.InventoryView;
+import com.clothingstore.inventory.ui.OrdersView;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -31,19 +32,29 @@ public class App extends Application {
         OrderDao orderDao = new OrderDao();
         StockTransactionDao stockTransactionDao = new StockTransactionDao();
 
-        InventoryService inventoryService = new InventoryService(itemDao);
+        InventoryService inventoryService = new InventoryService(itemDao, stockTransactionDao);
         OrderService orderService = new OrderService(itemDao, orderDao, stockTransactionDao);
 
         StackPane content = new StackPane();
         DashboardView dashboardView = new DashboardView(inventoryService);
         InventoryView inventoryView = new InventoryView(inventoryService, categoryDao);
+        OrdersView[] ordersViewHolder = new OrdersView[1]; // filled in below, referenced by the checkout callback
+
         CheckoutView checkoutView = new CheckoutView(inventoryService, orderService, () -> {
-            // After a sale completes, both other screens should reflect it immediately.
+            // After a sale completes, every other screen needs to reflect it immediately.
+            dashboardView.refresh();
+            inventoryView.refresh();
+            if (ordersViewHolder[0] != null) ordersViewHolder[0].refresh();
+        });
+
+        OrdersView ordersView = new OrdersView(orderDao, orderService, () -> {
+            // After a cancellation, stock changed -- dashboard and inventory need to catch up too.
             dashboardView.refresh();
             inventoryView.refresh();
         });
+        ordersViewHolder[0] = ordersView;
 
-        content.getChildren().addAll(dashboardView, inventoryView, checkoutView);
+        content.getChildren().addAll(dashboardView, inventoryView, checkoutView, ordersView);
         showOnly(content, dashboardView);
 
         Button dashboardBtn = navButton("Dashboard", () -> {
@@ -58,12 +69,16 @@ public class App extends Application {
             checkoutView.refreshCatalog();
             showOnly(content, checkoutView);
         });
+        Button ordersBtn = navButton("Orders", () -> {
+            ordersView.refresh();
+            showOnly(content, ordersView);
+        });
 
-        VBox nav = new VBox(8, dashboardBtn, inventoryBtn, checkoutBtn);
+        VBox nav = new VBox(8, dashboardBtn, inventoryBtn, checkoutBtn, ordersBtn);
         nav.setPadding(new Insets(20, 12, 20, 12));
         nav.setPrefWidth(160);
         nav.setStyle("-fx-background-color: #1e293b;");
-        for (Button b : java.util.List.of(dashboardBtn, inventoryBtn, checkoutBtn)) {
+        for (Button b : java.util.List.of(dashboardBtn, inventoryBtn, checkoutBtn, ordersBtn)) {
             b.setMaxWidth(Double.MAX_VALUE);
         }
 
@@ -71,9 +86,10 @@ public class App extends Application {
         root.setLeft(nav);
         root.setCenter(content);
 
-        Scene scene = new Scene(root, 1100, 700);
+        Scene scene = new Scene(root, 1150, 700);
         stage.setTitle("Clothing Store Inventory System");
         stage.setScene(scene);
+        stage.setOnCloseRequest(e -> DatabaseManager.closeConnection());
         stage.show();
     }
 

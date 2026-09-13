@@ -62,8 +62,8 @@ public class ItemDao implements GenericDao<Item, Integer> {
     private Item insert(Item item) {
         String sql = """
             INSERT INTO items (sku, name, category_id, size, color, price, quantity,
-                                reorder_threshold, status, date_added)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                reorder_threshold, status, date_added, image_path)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         try (PreparedStatement ps = DatabaseManager.getConnection()
                 .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -83,12 +83,12 @@ public class ItemDao implements GenericDao<Item, Integer> {
     private Item update(Item item) {
         String sql = """
             UPDATE items SET sku=?, name=?, category_id=?, size=?, color=?, price=?,
-                              quantity=?, reorder_threshold=?, status=?, date_added=?
+                              quantity=?, reorder_threshold=?, status=?, date_added=?, image_path=?
             WHERE item_id=?
             """;
         try (PreparedStatement ps = DatabaseManager.getConnection().prepareStatement(sql)) {
             bindItem(ps, item);
-            ps.setInt(11, item.getItemId());
+            ps.setInt(12, item.getItemId());
             ps.executeUpdate();
             return item;
         } catch (SQLException e) {
@@ -133,6 +133,7 @@ public class ItemDao implements GenericDao<Item, Integer> {
         ps.setInt(8, item.getReorderThreshold());
         ps.setString(9, item.getStatus().name());
         ps.setString(10, item.getDateAdded().toString());
+        ps.setString(11, item.getImagePath());
     }
 
     private Item mapRow(ResultSet rs) throws SQLException {
@@ -148,6 +149,7 @@ public class ItemDao implements GenericDao<Item, Integer> {
         item.setReorderThreshold(rs.getInt("reorder_threshold"));
         item.setQuantity(rs.getInt("quantity"));
         item.setStatus(ItemStatus.valueOf(rs.getString("status")));
+        item.setImagePath(rs.getString("image_path"));
         String dateStr = rs.getString("date_added");
         item.setDateAdded(dateStr != null ? LocalDate.parse(dateStr) : LocalDate.now());
         return item;

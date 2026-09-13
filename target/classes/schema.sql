@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS items (
     quantity INTEGER NOT NULL DEFAULT 0,
     reorder_threshold INTEGER NOT NULL DEFAULT 5,
     status TEXT NOT NULL DEFAULT 'OUT_OF_STOCK',
-    date_added TEXT NOT NULL
+    date_added TEXT NOT NULL,
+    image_path TEXT
 );
 
 CREATE TABLE IF NOT EXISTS stock_transactions (

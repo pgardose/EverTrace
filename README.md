@@ -60,9 +60,10 @@ icon it creates.
 
 ## Where the data lives
 
-The app creates `inventory.db` (a single SQLite file) in the same folder
-it's run from, the first time it launches. Back that file up and you've
-backed up the entire store's inventory and order history.
+The app creates `inventory.db` (a single SQLite file) and an `images/`
+folder in the same folder it's run from, the first time it launches.
+Back up both and you've backed up the entire store's inventory, order
+history, and item photos.
 
 ## Project structure
 
@@ -71,8 +72,9 @@ src/main/java/com/clothingstore/inventory/
 ├── App.java              # entry point, wires everything together
 ├── model/                # Item, Category, Order, OrderItem, enums, records
 ├── dao/                  # database access (JDBC + SQLite)
-├── service/              # business rules (checkout transaction, dashboard stats)
-└── ui/                   # JavaFX screens (Dashboard, Inventory, Checkout)
+├── service/              # business rules (checkout transaction, dashboard stats, restock)
+├── ui/                   # JavaFX screens (Dashboard, Inventory, Checkout, Orders, dialogs)
+└── util/                 # ImageStorage -- copies picked photos into images/
 src/main/resources/
 └── schema.sql            # table definitions, run automatically on first launch
 ```

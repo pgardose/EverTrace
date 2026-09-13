@@ -24,6 +24,7 @@ public class Item implements Sellable {
     private final IntegerProperty reorderThreshold = new SimpleIntegerProperty(5);
     private final ObjectProperty<ItemStatus> status = new SimpleObjectProperty<>(ItemStatus.OUT_OF_STOCK);
     private final ObjectProperty<LocalDate> dateAdded = new SimpleObjectProperty<>(LocalDate.now());
+    private final StringProperty imagePath = new SimpleStringProperty();
 
     public Item() {}
 
@@ -117,4 +118,8 @@ public class Item implements Sellable {
     public LocalDate getDateAdded() { return dateAdded.get(); }
     public void setDateAdded(LocalDate v) { dateAdded.set(v); }
     public ObjectProperty<LocalDate> dateAddedProperty() { return dateAdded; }
+
+    public String getImagePath() { return imagePath.get(); }
+    public void setImagePath(String v) { imagePath.set(v); }
+    public StringProperty imagePathProperty() { return imagePath; }
 }

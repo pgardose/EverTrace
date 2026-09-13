@@ -80,6 +80,36 @@ public class OrderService {
         }
     }
 
+    /**
+     * Cancels a completed order: restocks every item it contained, logs a
+     * CANCELLATION audit row for each, and flips the order's status --
+     * all as one transaction so a partial cancellation can never happen.
+     */
+    public void cancelOrder(int orderId) {
+        List<OrderItem> lines = orderDao.findLinesForOrder(orderId);
+        Connection conn = DatabaseManager.getConnection();
+        try {
+            conn.setAutoCommit(false);
+
+            for (OrderItem line : lines) {
+                Item item = itemDao.findById(line.getItemId())
+                        .orElseThrow(() -> new NoSuchElementException("Item not found: " + line.getItemId()));
+                item.restock(line.getQuantity());
+                itemDao.updateQuantityAndStatus(conn, item);
+                stockTransactionDao.logChange(conn, item.getItemId(), line.getQuantity(), "CANCELLATION");
+            }
+
+            orderDao.updateStatus(conn, orderId, Order.OrderStatus.CANCELLED);
+            conn.commit();
+
+        } catch (SQLException e) {
+            rollbackQuietly(conn);
+            throw new DataAccessException("Cancellation failed and was rolled back", e);
+        } finally {
+            restoreAutoCommit(conn);
+        }
+    }
+
     private void rollbackQuietly(Connection conn) {
         try {
             conn.rollback();

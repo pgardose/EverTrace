@@ -57,5 +57,31 @@ public final class DatabaseManager {
         } catch (IOException | SQLException e) {
             throw new DataAccessException("Failed to initialize database schema", e);
         }
+        migrateAddImagePathColumn();
+    }
+
+    /**
+     * CREATE TABLE IF NOT EXISTS doesn't add new columns to a table that
+     * already existed before this feature was added, so anyone with a
+     * pre-existing inventory.db needs this one-time ALTER TABLE. Safe to
+     * run every startup -- the "duplicate column" failure just means it
+     * already ran before, so it's swallowed rather than treated as an error.
+     */
+    private static void migrateAddImagePathColumn() {
+        try (Statement stmt = getConnection().createStatement()) {
+            stmt.execute("ALTER TABLE items ADD COLUMN image_path TEXT");
+        } catch (SQLException alreadyExists) {
+            // Expected on every run after the first -- the column is already there.
+        }
+    }
+
+    /** Called on app shutdown so the SQLite file is released cleanly. */
+    public static synchronized void closeConnection() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException ignored) {
+        }
     }
 }

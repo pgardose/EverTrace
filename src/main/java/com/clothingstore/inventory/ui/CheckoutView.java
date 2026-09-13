@@ -82,14 +82,25 @@ public class CheckoutView extends BorderPane {
     }
 
     private void buildCatalogTable() {
+        TableColumn<Item, String> photoCol = new TableColumn<>("Photo");
+        photoCol.setCellValueFactory(new PropertyValueFactory<>("imagePath"));
+        photoCol.setCellFactory(col -> new ThumbnailCell<>());
+        photoCol.setSortable(false);
+        photoCol.setPrefWidth(60);
+
         TableColumn<Item, String> nameCol = new TableColumn<>("Item");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         TableColumn<Item, Number> priceCol = new TableColumn<>("Price");
         priceCol.setCellValueFactory(new PropertyValueFactory<>("price"));
         TableColumn<Item, Number> qtyCol = new TableColumn<>("In Stock");
         qtyCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-        catalogTable.getColumns().setAll(List.of(nameCol, priceCol, qtyCol));
+        catalogTable.getColumns().setAll(List.of(photoCol, nameCol, priceCol, qtyCol));
         catalogTable.setPrefHeight(400);
+        catalogTable.setRowFactory(tv -> {
+            javafx.scene.control.TableRow<Item> row = new javafx.scene.control.TableRow<>();
+            row.setPrefHeight(48);
+            return row;
+        });
     }
 
     private void buildCartTable() {
@@ -169,6 +180,8 @@ public class CheckoutView extends BorderPane {
             // bought the last unit between browsing and confirming. Refresh and tell them.
             new Alert(Alert.AlertType.ERROR, ex.getMessage()).showAndWait();
             refreshCatalog();
+        } catch (com.clothingstore.inventory.dao.DataAccessException ex) {
+            new Alert(Alert.AlertType.ERROR, "Checkout failed and was rolled back. No stock was changed.").showAndWait();
         }
     }
 }
