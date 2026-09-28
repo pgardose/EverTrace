@@ -1,0 +1,61 @@
+/*
+ * Loaded on top of the AtlantaFX base theme (set in App.java).
+ * AtlantaFX handles the overall flat/modern look (buttons, fields, tables);
+ * this file adds the two custom pieces the spec asked for that no
+ * off-the-shelf theme provides: pill-style status badges and KPI cards.
+ */
+
+/* ---------- Status badges ---------- */
+.status-badge {
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-alignment: CENTER;
+}
+.status-badge.available     { -fx-background-color: #16a34a; }
+.status-badge.low-stock     { -fx-background-color: #d97706; }
+.status-badge.out-of-stock  { -fx-background-color: #dc2626; }
+.status-badge.discontinued  { -fx-background-color: #6b7280; }
+
+/* ---------- Dashboard KPI cards ---------- */
+.kpi-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);
+}
+.kpi-icon {
+    -fx-font-size: 22px;
+}
+.kpi-value {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+.kpi-label {
+    -fx-font-size: 12px;
+    -fx-opacity: 0.7;
+}
+
+/* ---------- Sidebar nav ---------- */
+.nav-sidebar {
+    -fx-background-color: #1e293b;
+}
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 14 10 14;
+    -fx-background-radius: 8;
+    -fx-font-size: 13px;
+}
+.nav-button:hover {
+    -fx-background-color: rgba(255,255,255,0.12);
+}
+.nav-button:pressed, .nav-button.active {
+    -fx-background-color: #2563eb;
+}
