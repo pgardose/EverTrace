@@ -14,7 +14,12 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>21.0.2</javafx.version>
+<<<<<<< HEAD
         <main.class>com.clothingstore.inventory.App</main.class>
+=======
+        <main.class>com.clothingstore.inventory.Launcher</main.class>
+        <exec.mainClass>${main.class}</exec.mainClass>
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     </properties>
 
     <dependencies>
@@ -30,7 +35,11 @@
             <version>${javafx.version}</version>
         </dependency>
 
+<<<<<<< HEAD
         <!-- AtlantaFX: modern flat theme for JavaFX - the JavaFX equivalent of
+=======
+        <!-- AtlantaFX: modern flat theme for JavaFX  -  the JavaFX equivalent of
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
              FlatLaf. PrimerLight/CupertinoLight give the same clean, flat,
              rounded-corner aesthetic FlatLaf gives Swing apps. -->
         <dependency>
@@ -92,7 +101,11 @@
                 </configuration>
             </plugin>
 
+<<<<<<< HEAD
             <!-- Bundles everything into one runnable jar - what you hand to jpackage later -->
+=======
+            <!-- Bundles everything into one runnable jar  -  what you hand to jpackage later -->
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -113,4 +126,8 @@
             </plugin>
         </plugins>
     </build>
+<<<<<<< HEAD
 </project>
+=======
+</project>
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823

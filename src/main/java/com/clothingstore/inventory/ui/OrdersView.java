@@ -72,6 +72,15 @@ public class OrdersView extends BorderPane {
         TableColumn<Order, Number> idCol = new TableColumn<>("Order #");
         idCol.setCellValueFactory(new PropertyValueFactory<>("orderId"));
 
+<<<<<<< HEAD
+=======
+        TableColumn<Order, String> dateCol = new TableColumn<>("Date");
+        dateCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
+                cell.getValue().getOrderDate() == null ? ""
+                        : cell.getValue().getOrderDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a"))));
+        dateCol.setPrefWidth(160);
+
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         TableColumn<Order, String> customerCol = new TableColumn<>("Customer");
         customerCol.setCellValueFactory(new PropertyValueFactory<>("customerName"));
 
@@ -82,12 +91,20 @@ public class OrdersView extends BorderPane {
         statusCol.setCellValueFactory(cell ->
                 new javafx.beans.property.SimpleStringProperty(cell.getValue().getStatus().name()));
 
+<<<<<<< HEAD
         ordersTable.getColumns().setAll(List.of(idCol, customerCol, totalCol, statusCol));
+=======
+        ordersTable.getColumns().setAll(List.of(idCol, dateCol, customerCol, totalCol, statusCol));
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         ordersTable.setPrefSize(500, 450);
     }
 
     private void buildLinesTable() {
+<<<<<<< HEAD
         TableColumn<OrderItem, String> nameCol = new TableColumn<>("Item");
+=======
+        TableColumn<OrderItem, String> nameCol = new TableColumn<>("Brand");
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         nameCol.setCellValueFactory(new PropertyValueFactory<>("itemName"));
 
         TableColumn<OrderItem, Number> qtyCol = new TableColumn<>("Qty");

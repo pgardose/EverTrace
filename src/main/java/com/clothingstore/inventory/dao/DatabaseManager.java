@@ -5,7 +5,10 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
+<<<<<<< HEAD
 import java.sql.ResultSet;
+=======
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -58,6 +61,7 @@ public final class DatabaseManager {
         } catch (IOException | SQLException e) {
             throw new DataAccessException("Failed to initialize database schema", e);
         }
+<<<<<<< HEAD
         // CREATE TABLE IF NOT EXISTS never adds columns to a table that already
         // exists, so databases created by older versions of the app need these.
         addColumnIfMissing("items", "image_path", "TEXT");
@@ -84,10 +88,54 @@ public final class DatabaseManager {
             stmt.execute("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
         } catch (SQLException e) {
             throw new DataAccessException("Failed to add column " + table + "." + column, e);
+=======
+        migrateAddImagePathColumn();
+        migrateAddRemovedColumn();
+    }
+
+    /**
+     * CREATE TABLE IF NOT EXISTS doesn't add new columns to a table that
+     * already existed before this feature was added, so anyone with a
+     * pre-existing inventory.db needs this one-time ALTER TABLE. Safe to
+     * run every startup -- the "duplicate column" failure just means it
+     * already ran before, so it's swallowed rather than treated as an error.
+     */
+    private static void migrateAddImagePathColumn() {
+        try (Statement stmt = getConnection().createStatement()) {
+            stmt.execute("ALTER TABLE items ADD COLUMN image_path TEXT");
+        } catch (SQLException alreadyExists) {
+            // Expected on every run after the first -- the column is already there.
+        }
+    }
+
+    /**
+     * Same idea for the "removed" flag (items taken out of inventory by a sale).
+     * When the column is added for the first time, items that were already sold
+     * out through a completed order are flagged removed too, so an existing
+     * database matches the new behaviour straight away.
+     */
+    private static void migrateAddRemovedColumn() {
+        try (Statement stmt = getConnection().createStatement()) {
+            stmt.execute("ALTER TABLE items ADD COLUMN removed INTEGER NOT NULL DEFAULT 0");
+        } catch (SQLException alreadyExists) {
+            return; // column already there -> migration already ran
+        }
+        try (Statement stmt = getConnection().createStatement()) {
+            stmt.execute("""
+                UPDATE items SET removed = 1
+                WHERE quantity <= 0
+                  AND item_id IN (SELECT oi.item_id FROM order_items oi
+                                  JOIN orders o ON o.order_id = oi.order_id
+                                  WHERE o.status = 'COMPLETED')
+                """);
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to back-fill removed items", e);
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         }
     }
 
     /** Called on app shutdown so the SQLite file is released cleanly. */
+<<<<<<< HEAD
     /**
      * Row id of the most recent INSERT on the shared connection. Used instead of
      * JDBC getGeneratedKeys(), which not every sqlite-jdbc build implements.
@@ -101,6 +149,8 @@ public final class DatabaseManager {
         }
     }
 
+=======
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     public static synchronized void closeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {

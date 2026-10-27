@@ -12,11 +12,18 @@ CREATE TABLE IF NOT EXISTS items (
     color TEXT,
     price REAL NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 0,
+<<<<<<< HEAD
     reorder_threshold INTEGER NOT NULL DEFAULT 5,
     status TEXT NOT NULL DEFAULT 'OUT_OF_STOCK',
     date_added TEXT NOT NULL,
     image_path TEXT,
     archived INTEGER NOT NULL DEFAULT 0
+=======
+    status TEXT NOT NULL DEFAULT 'OUT_OF_STOCK',
+    date_added TEXT NOT NULL,
+    image_path TEXT,
+    removed INTEGER NOT NULL DEFAULT 0
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 );
 
 CREATE TABLE IF NOT EXISTS stock_transactions (
@@ -43,6 +50,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     unit_price REAL NOT NULL
 );
 
+<<<<<<< HEAD
 CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -50,5 +58,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TEXT NOT NULL
 );
 
+=======
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 INSERT OR IGNORE INTO categories (category_id, name) VALUES
     (1, 'Tops'), (2, 'Bottoms'), (3, 'Outerwear'), (4, 'Accessories');

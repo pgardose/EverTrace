@@ -43,10 +43,19 @@ public class CategoryDao implements GenericDao<Category, Integer> {
     public Category save(Category category) {
         String sql = "INSERT INTO categories (name) VALUES (?)";
         try (PreparedStatement ps = DatabaseManager.getConnection()
+<<<<<<< HEAD
                 .prepareStatement(sql)) {
             ps.setString(1, category.getName());
             ps.executeUpdate();
             category.setCategoryId(DatabaseManager.lastInsertId());
+=======
+                .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, category.getName());
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) category.setCategoryId(keys.getInt(1));
+            }
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
             return category;
         } catch (SQLException e) {
             throw new DataAccessException("Failed to insert category " + category.getName(), e);

@@ -40,6 +40,7 @@ public final class ImageStorage {
         }
     }
 
+<<<<<<< HEAD
     /** Deletes a stored image file. Never throws: a missing/locked file shouldn't block removing an item. */
     public static void delete(String relativePath) {
         if (relativePath == null || relativePath.isBlank()) return;
@@ -50,6 +51,8 @@ public final class ImageStorage {
         }
     }
 
+=======
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     /** Resolves a stored relative path back to an absolute file path for display. */
     public static Path resolve(String relativePath) {
         return Path.of(relativePath);

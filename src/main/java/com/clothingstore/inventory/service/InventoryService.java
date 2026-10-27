@@ -27,6 +27,14 @@ public class InventoryService {
         return itemDao.findAll();
     }
 
+<<<<<<< HEAD
+=======
+    /** Includes items removed by a sale -- only needed so generated item codes never collide with them. */
+    public List<Item> getAllItemsIncludingRemoved() {
+        return itemDao.findAll(true);
+    }
+
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     public List<Item> getLowStockItems() {
         return itemDao.findLowStock();
     }
@@ -36,7 +44,11 @@ public class InventoryService {
     }
 
     public Item addItem(Item item) {
+<<<<<<< HEAD
         item.setStatus(ItemStatus.fromQuantity(item.getQuantity(), item.getReorderThreshold()));
+=======
+        item.setStatus(ItemStatus.fromQuantity(item.getQuantity()));
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         return itemDao.save(item);
     }
 
@@ -77,6 +89,10 @@ public class InventoryService {
         List<Item> items = itemDao.findAll();
         return new StockSummary(
                 items.size(),
+<<<<<<< HEAD
+=======
+                items.stream().mapToInt(Item::getQuantity).sum(),
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
                 (int) items.stream().filter(i -> i.getStatus() == ItemStatus.LOW_STOCK).count(),
                 (int) items.stream().filter(i -> i.getStatus() == ItemStatus.OUT_OF_STOCK).count(),
                 items.stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum()

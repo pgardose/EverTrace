@@ -12,10 +12,17 @@ CREATE TABLE IF NOT EXISTS items (
     color TEXT,
     price REAL NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 0,
+<<<<<<< HEAD
     reorder_threshold INTEGER NOT NULL DEFAULT 5,
     status TEXT NOT NULL DEFAULT 'OUT_OF_STOCK',
     date_added TEXT NOT NULL,
     image_path TEXT
+=======
+    status TEXT NOT NULL DEFAULT 'OUT_OF_STOCK',
+    date_added TEXT NOT NULL,
+    image_path TEXT,
+    removed INTEGER NOT NULL DEFAULT 0
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 );
 
 CREATE TABLE IF NOT EXISTS stock_transactions (

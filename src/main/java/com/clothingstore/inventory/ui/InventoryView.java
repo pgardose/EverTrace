@@ -39,7 +39,11 @@ public class InventoryView extends BorderPane {
 
         buildTable();
 
+<<<<<<< HEAD
         searchField.setPromptText("Search by name or SKU...");
+=======
+        searchField.setPromptText("Search by brand or code...");
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilter(newVal));
 
         Button addBtn = new Button("Add Item");
@@ -90,12 +94,21 @@ public class InventoryView extends BorderPane {
         photoCol.setCellValueFactory(new PropertyValueFactory<>("imagePath"));
         photoCol.setCellFactory(col -> new ThumbnailCell<>());
         photoCol.setSortable(false);
+<<<<<<< HEAD
         photoCol.setPrefWidth(70);
 
         TableColumn<Item, String> skuCol = new TableColumn<>("SKU");
         skuCol.setCellValueFactory(new PropertyValueFactory<>("sku"));
 
         TableColumn<Item, String> nameCol = new TableColumn<>("Name");
+=======
+        photoCol.setPrefWidth(80);
+
+        TableColumn<Item, String> skuCol = new TableColumn<>("Code");
+        skuCol.setCellValueFactory(new PropertyValueFactory<>("sku"));
+
+        TableColumn<Item, String> nameCol = new TableColumn<>("Brand");
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
         TableColumn<Item, String> categoryCol = new TableColumn<>("Category");
@@ -132,14 +145,22 @@ public class InventoryView extends BorderPane {
             new Alert(Alert.AlertType.WARNING, "Add at least one category first (Manage Categories).").showAndWait();
             return;
         }
+<<<<<<< HEAD
         ItemFormDialog dialog = new ItemFormDialog(categories, null, inventoryService.getAllItems());
+=======
+        ItemFormDialog dialog = new ItemFormDialog(categories, null, inventoryService.getAllItemsIncludingRemoved());
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         dialog.showAndWait().ifPresent(item -> {
             try {
                 inventoryService.addItem(item);
                 refresh();
             } catch (DataAccessException ex) {
                 new Alert(Alert.AlertType.ERROR,
+<<<<<<< HEAD
                         "Couldn't save this item -- check that the SKU isn't already used by another item.")
+=======
+                        "Couldn't save this item -- check that the code isn't already used by another item.")
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
                         .showAndWait();
             }
         });
@@ -156,7 +177,11 @@ public class InventoryView extends BorderPane {
                 refresh();
             } catch (DataAccessException ex) {
                 new Alert(Alert.AlertType.ERROR,
+<<<<<<< HEAD
                         "Couldn't save changes -- check that the SKU isn't already used by another item.")
+=======
+                        "Couldn't save changes -- check that the code isn't already used by another item.")
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
                         .showAndWait();
             }
         });
@@ -196,6 +221,7 @@ public class InventoryView extends BorderPane {
         Item selected = table.getSelectionModel().getSelectedItem();
         if (selected == null) return;
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+<<<<<<< HEAD
                 "Remove \"" + selected.getName() + "\" from your inventory?");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -212,6 +238,18 @@ public class InventoryView extends BorderPane {
                 Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                 new Alert(Alert.AlertType.ERROR,
                         "Couldn't remove this item: " + cause.getMessage()).showAndWait();
+=======
+                "Delete \"" + selected.getName() + "\"? This cannot be undone.");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            try {
+                inventoryService.removeItem(selected.getItemId());
+                refresh();
+            } catch (DataAccessException ex) {
+                new Alert(Alert.AlertType.ERROR,
+                        "Couldn't delete this item -- it may be referenced by an existing order.")
+                        .showAndWait();
+>>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
             }
         }
     }
