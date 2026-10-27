@@ -12,15 +12,13 @@ public class OrderDao {
     /** Inserts the order header + all its lines using the SAME connection/transaction as the caller. */
     public Order save(Connection conn, Order order) throws SQLException {
         String orderSql = "INSERT INTO orders (customer_name, order_date, total_amount, status) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(orderSql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(orderSql)) {
             ps.setString(1, order.getCustomerName());
             ps.setString(2, order.getOrderDate().toString());
             ps.setDouble(3, order.getTotalAmount());
             ps.setString(4, order.getStatus().name());
             ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) order.setOrderId(keys.getInt(1));
-            }
+            order.setOrderId(DatabaseManager.lastInsertId());
         }
 
         String lineSql = "INSERT INTO order_items (order_id, item_id, quantity, unit_price) VALUES (?, ?, ?, ?)";

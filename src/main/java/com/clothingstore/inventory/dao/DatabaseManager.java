@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -57,25 +58,49 @@ public final class DatabaseManager {
         } catch (IOException | SQLException e) {
             throw new DataAccessException("Failed to initialize database schema", e);
         }
-        migrateAddImagePathColumn();
+        // CREATE TABLE IF NOT EXISTS never adds columns to a table that already
+        // exists, so databases created by older versions of the app need these.
+        addColumnIfMissing("items", "image_path", "TEXT");
+        addColumnIfMissing("items", "archived", "INTEGER NOT NULL DEFAULT 0");
     }
 
     /**
-     * CREATE TABLE IF NOT EXISTS doesn't add new columns to a table that
-     * already existed before this feature was added, so anyone with a
-     * pre-existing inventory.db needs this one-time ALTER TABLE. Safe to
-     * run every startup -- the "duplicate column" failure just means it
-     * already ran before, so it's swallowed rather than treated as an error.
+     * Adds a column to an existing table only if it isn't there yet, by checking
+     * PRAGMA table_info first (rather than blindly running ALTER TABLE and
+     * swallowing every failure, which could hide a real error).
      */
-    private static void migrateAddImagePathColumn() {
+    private static void addColumnIfMissing(String table, String column, String definition) {
+        try (Statement stmt = getConnection().createStatement();
+             java.sql.ResultSet rs = stmt.executeQuery("PRAGMA table_info(" + table + ")")) {
+            while (rs.next()) {
+                if (column.equalsIgnoreCase(rs.getString("name"))) {
+                    return;
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to inspect table " + table, e);
+        }
         try (Statement stmt = getConnection().createStatement()) {
-            stmt.execute("ALTER TABLE items ADD COLUMN image_path TEXT");
-        } catch (SQLException alreadyExists) {
-            // Expected on every run after the first -- the column is already there.
+            stmt.execute("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to add column " + table + "." + column, e);
         }
     }
 
     /** Called on app shutdown so the SQLite file is released cleanly. */
+    /**
+     * Row id of the most recent INSERT on the shared connection. Used instead of
+     * JDBC getGeneratedKeys(), which not every sqlite-jdbc build implements.
+     */
+    public static synchronized int lastInsertId() {
+        try (Statement st = getConnection().createStatement();
+             ResultSet rs = st.executeQuery("SELECT last_insert_rowid()")) {
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not read the new row id", e);
+        }
+    }
+
     public static synchronized void closeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {

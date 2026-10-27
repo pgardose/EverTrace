@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS items (
     reorder_threshold INTEGER NOT NULL DEFAULT 5,
     status TEXT NOT NULL DEFAULT 'OUT_OF_STOCK',
     date_added TEXT NOT NULL,
-    image_path TEXT
+    image_path TEXT,
+    archived INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS stock_transactions (
@@ -40,6 +41,13 @@ CREATE TABLE IF NOT EXISTS order_items (
     item_id INTEGER REFERENCES items(item_id),
     quantity INTEGER NOT NULL,
     unit_price REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
 );
 
 INSERT OR IGNORE INTO categories (category_id, name) VALUES

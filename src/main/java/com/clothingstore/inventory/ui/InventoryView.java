@@ -113,9 +113,9 @@ public class InventoryView extends BorderPane {
         TableColumn<Item, Number> qtyCol = new TableColumn<>("Qty");
         qtyCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
 
-        TableColumn<Item, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(cell ->
-                new javafx.beans.property.SimpleStringProperty(cell.getValue().getStatus().displayName()));
+        TableColumn<Item, com.clothingstore.inventory.model.ItemStatus> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
+        statusCol.setCellFactory(col -> new StatusBadgeCell<>());
 
         table.getColumns().setAll(List.of(photoCol, skuCol, nameCol, categoryCol, sizeCol, colorCol, priceCol, qtyCol, statusCol));
         table.setPrefHeight(500);
@@ -132,7 +132,7 @@ public class InventoryView extends BorderPane {
             new Alert(Alert.AlertType.WARNING, "Add at least one category first (Manage Categories).").showAndWait();
             return;
         }
-        ItemFormDialog dialog = new ItemFormDialog(categories, null);
+        ItemFormDialog dialog = new ItemFormDialog(categories, null, inventoryService.getAllItems());
         dialog.showAndWait().ifPresent(item -> {
             try {
                 inventoryService.addItem(item);
@@ -196,16 +196,22 @@ public class InventoryView extends BorderPane {
         Item selected = table.getSelectionModel().getSelectedItem();
         if (selected == null) return;
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "Delete \"" + selected.getName() + "\"? This cannot be undone.");
+                "Remove \"" + selected.getName() + "\" from your inventory?");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
-                inventoryService.removeItem(selected.getItemId());
+                InventoryService.RemoveResult outcome = inventoryService.removeItem(selected);
                 refresh();
+                if (outcome == InventoryService.RemoveResult.ARCHIVED) {
+                    new Alert(Alert.AlertType.INFORMATION,
+                            "\"" + selected.getName() + "\" has sales or stock history, so it was archived "
+                                    + "instead of deleted. It no longer appears in Inventory or Checkout, "
+                                    + "and your past orders are unchanged.").showAndWait();
+                }
             } catch (DataAccessException ex) {
+                Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                 new Alert(Alert.AlertType.ERROR,
-                        "Couldn't delete this item -- it may be referenced by an existing order.")
-                        .showAndWait();
+                        "Couldn't remove this item: " + cause.getMessage()).showAndWait();
             }
         }
     }

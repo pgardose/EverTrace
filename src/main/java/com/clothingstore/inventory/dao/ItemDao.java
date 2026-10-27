@@ -33,6 +33,7 @@ public class ItemDao implements GenericDao<Item, Integer> {
         String sql = """
             SELECT i.*, c.name AS category_name FROM items i
             LEFT JOIN categories c ON i.category_id = c.category_id
+            WHERE i.archived = 0
             ORDER BY i.name
             """;
         List<Item> items = new ArrayList<>();
@@ -66,14 +67,10 @@ public class ItemDao implements GenericDao<Item, Integer> {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         try (PreparedStatement ps = DatabaseManager.getConnection()
-                .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                .prepareStatement(sql)) {
             bindItem(ps, item);
             ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    item.setItemId(keys.getInt(1));
-                }
-            }
+            item.setItemId(DatabaseManager.lastInsertId());
             return item;
         } catch (SQLException e) {
             throw new DataAccessException("Failed to insert item " + item.getName(), e);
@@ -119,6 +116,38 @@ public class ItemDao implements GenericDao<Item, Integer> {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new DataAccessException("Failed to delete item " + id, e);
+        }
+    }
+
+    /**
+     * True if any order line or stock-history row points at this item. Such an
+     * item can't be hard-deleted (the foreign keys protect the sales records),
+     * so the service archives it instead.
+     */
+    public boolean hasHistory(int itemId) {
+        String sql = """
+            SELECT (SELECT COUNT(*) FROM order_items WHERE item_id = ?)
+                 + (SELECT COUNT(*) FROM stock_transactions WHERE item_id = ?)
+            """;
+        try (PreparedStatement ps = DatabaseManager.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, itemId);
+            ps.setInt(2, itemId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to check history for item " + itemId, e);
+        }
+    }
+
+    /** Hides an item from inventory/checkout/dashboard without touching its sales history. */
+    public void archive(int itemId) {
+        String sql = "UPDATE items SET archived = 1 WHERE item_id = ?";
+        try (PreparedStatement ps = DatabaseManager.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, itemId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to archive item " + itemId, e);
         }
     }
 

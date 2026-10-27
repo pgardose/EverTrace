@@ -40,6 +40,16 @@ public final class ImageStorage {
         }
     }
 
+    /** Deletes a stored image file. Never throws: a missing/locked file shouldn't block removing an item. */
+    public static void delete(String relativePath) {
+        if (relativePath == null || relativePath.isBlank()) return;
+        try {
+            Files.deleteIfExists(Path.of(relativePath));
+        } catch (IOException ignored) {
+            // Leaving an orphan image behind is harmless; failing the whole delete is not.
+        }
+    }
+
     /** Resolves a stored relative path back to an absolute file path for display. */
     public static Path resolve(String relativePath) {
         return Path.of(relativePath);

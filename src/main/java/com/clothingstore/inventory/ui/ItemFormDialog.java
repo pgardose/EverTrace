@@ -18,6 +18,7 @@ import java.io.File;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /** Modal dialog for adding a new item or editing an existing one. */
@@ -30,6 +31,16 @@ public class ItemFormDialog extends Dialog<Item> {
     private String existingImagePath;
 
     public ItemFormDialog(List<Category> categories, Item existing) {
+        this(categories, existing, List.of());
+    }
+
+    /**
+     * @param existingItems current inventory, used only to compute the next
+     *                       sequence number when auto-generating a SKU for a
+     *                       brand-new item. Pass an empty list when editing --
+     *                       auto-generation never runs in edit mode.
+     */
+    public ItemFormDialog(List<Category> categories, Item existing, List<Item> existingItems) {
         setTitle(existing == null ? "Add New Item" : "Edit Item");
         existingImagePath = existing != null ? existing.getImagePath() : null;
 
@@ -41,6 +52,33 @@ public class ItemFormDialog extends Dialog<Item> {
         TextField priceField = new TextField(existing != null ? String.valueOf(existing.getPrice()) : "");
         TextField quantityField = new TextField(existing != null ? String.valueOf(existing.getQuantity()) : "0");
         TextField reorderField = new TextField(existing != null ? String.valueOf(existing.getReorderThreshold()) : "5");
+
+        // --- SKU auto-generation (new items only) ---
+        // Regenerates the SKU from category/color/size UNTIL the user types into
+        // the SKU field themselves -- after that, we assume they want manual control
+        // and stop overwriting what they typed.
+        boolean[] userEditedSku = {false};
+        boolean[] settingSkuProgrammatically = {false};
+        skuField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!settingSkuProgrammatically[0]) {
+                userEditedSku[0] = true;
+            }
+        });
+        Runnable regenerateSku = () -> {
+            if (existing != null || userEditedSku[0]) return;
+            Category cat = categoryBox.getValue();
+            String size = sizeField.getText();
+            String color = colorField.getText();
+            if (cat == null || size == null || size.isBlank() || color == null || color.isBlank()) return;
+
+            String generated = generateSku(cat.getName(), color, size, existingItems);
+            settingSkuProgrammatically[0] = true;
+            skuField.setText(generated);
+            settingSkuProgrammatically[0] = false;
+        };
+        categoryBox.valueProperty().addListener((o, ov, nv) -> regenerateSku.run());
+        sizeField.textProperty().addListener((o, ov, nv) -> regenerateSku.run());
+        colorField.textProperty().addListener((o, ov, nv) -> regenerateSku.run());
 
         ImageView preview = new ImageView();
         preview.setFitWidth(100);
@@ -133,6 +171,36 @@ public class ItemFormDialog extends Dialog<Item> {
 
             return item;
         });
+    }
+
+    /**
+     * Builds a SKU like "TOP-BLA-M-001": first 3 letters of category + first 3
+     * letters of color + size, uppercased, plus a 3-digit sequence number based
+     * on how many existing items already share that exact combination.
+     * <p>
+     * Note: this uses the first 3 letters of the color name (so "Black" -> "BLA"),
+     * not a curated abbreviation table (which would give "BLK"). Swap in a
+     * lookup map here if specific abbreviations matter for your catalog.
+     */
+    private String generateSku(String categoryName, String color, String size, List<Item> existingItems) {
+        String catPart = abbreviate(categoryName);
+        String colorPart = abbreviate(color);
+        String sizePart = size.trim().toUpperCase(Locale.ROOT);
+
+        long matchingCount = existingItems.stream()
+                .filter(i -> catPart.equals(abbreviate(i.getCategoryName()))
+                        && colorPart.equals(abbreviate(i.getColor()))
+                        && sizePart.equalsIgnoreCase(i.getSize()))
+                .count();
+
+        int sequence = (int) matchingCount + 1;
+        return "%s-%s-%s-%03d".formatted(catPart, colorPart, sizePart, sequence);
+    }
+
+    private String abbreviate(String text) {
+        if (text == null || text.isBlank()) return "GEN";
+        String cleaned = text.trim().toUpperCase(Locale.ROOT);
+        return cleaned.length() <= 3 ? cleaned : cleaned.substring(0, 3);
     }
 
     private void loadPreview(ImageView view, String imagePath) {

@@ -30,6 +30,28 @@
             <version>${javafx.version}</version>
         </dependency>
 
+        <!-- AtlantaFX: modern flat theme for JavaFX - the JavaFX equivalent of
+             FlatLaf. PrimerLight/CupertinoLight give the same clean, flat,
+             rounded-corner aesthetic FlatLaf gives Swing apps. -->
+        <dependency>
+            <groupId>io.github.mkpaz</groupId>
+            <artifactId>atlantafx-base</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+
+        <!-- Ikonli: icon fonts for JavaFX (KPI card icons, button icons).
+             Material2 pack has a clean, modern icon set that fits AtlantaFX well. -->
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-javafx</artifactId>
+            <version>12.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-material2-pack</artifactId>
+            <version>12.3.1</version>
+        </dependency>
+
         <!-- SQLite JDBC driver -->
         <dependency>
             <groupId>org.xerial</groupId>
@@ -43,10 +65,23 @@
             <artifactId>slf4j-simple</artifactId>
             <version>2.0.12</version>
         </dependency>
+
+        <!-- OpenPDF: for receipt PDF generation -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>1.3.39</version>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+
             <!-- Lets you run it during development with: mvn javafx:run -->
             <plugin>
                 <groupId>org.openjfx</groupId>
@@ -57,8 +92,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Bundles everything (including SQLite driver) into one runnable jar.
-                 This single jar is what you hand to jpackage later to build the .exe -->
+            <!-- Bundles everything into one runnable jar - what you hand to jpackage later -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

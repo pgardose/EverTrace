@@ -111,8 +111,21 @@ public class CheckoutView extends BorderPane {
         qtyCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         qtyCol.setCellFactory(TextFieldTableCell.forTableColumn(new javafx.util.converter.IntegerStringConverter()));
         qtyCol.setOnEditCommit(evt -> {
-            int newQty = Math.max(1, evt.getNewValue());
-            evt.getRowValue().setQuantity(newQty);
+            CartLine line = evt.getRowValue();
+            int newQty = evt.getNewValue();
+            if (newQty <= 0) {
+                new Alert(Alert.AlertType.WARNING, "Quantity must be at least 1.").showAndWait();
+                cartTable.refresh();
+                return;
+            }
+            if (newQty > line.getItem().getQuantity()) {
+                new Alert(Alert.AlertType.WARNING,
+                        "Only %d in stock for \"%s\".".formatted(line.getItem().getQuantity(), line.getItemName()))
+                        .showAndWait();
+                cartTable.refresh();
+                return;
+            }
+            line.setQuantity(newQty);
             updateTotal();
             cartTable.refresh();
         });
@@ -129,17 +142,56 @@ public class CheckoutView extends BorderPane {
 
     private void onAddToCart() {
         Item selected = catalogTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
+        if (selected == null) {
+            new Alert(Alert.AlertType.INFORMATION, "Select an item from the catalog first.").showAndWait();
+            return;
+        }
 
-        cartData.stream()
-                .filter(line -> line.getItem().getItemId() == selected.getItemId())
-                .findFirst()
-                .ifPresentOrElse(
-                        existing -> existing.setQuantity(existing.getQuantity() + 1),
-                        () -> cartData.add(new CartLine(selected))
-                );
-        updateTotal();
-        cartTable.refresh();
+        TextInputDialog qtyDialog = new TextInputDialog("1");
+        qtyDialog.setTitle("Add to Cart");
+        qtyDialog.setHeaderText(null);
+        qtyDialog.setContentText("Quantity of \"" + selected.getName() + "\" (in stock: " + selected.getQuantity() + "):");
+
+        qtyDialog.showAndWait().ifPresent(text -> {
+            int qty;
+            try {
+                qty = Integer.parseInt(text.trim());
+            } catch (NumberFormatException ex) {
+                new Alert(Alert.AlertType.WARNING, "Enter a whole number.").showAndWait();
+                return;
+            }
+            if (qty <= 0) {
+                new Alert(Alert.AlertType.WARNING, "Quantity must be at least 1.").showAndWait();
+                return;
+            }
+
+            // Check against what's already in the cart too, not just raw stock --
+            // otherwise you could add 5+5 of a 6-in-stock item and only find out at checkout.
+            int alreadyInCart = cartData.stream()
+                    .filter(line -> line.getItem().getItemId() == selected.getItemId())
+                    .mapToInt(CartLine::getQuantity)
+                    .sum();
+            if (alreadyInCart + qty > selected.getQuantity()) {
+                new Alert(Alert.AlertType.WARNING,
+                        "Only %d in stock (%d already in your cart).".formatted(selected.getQuantity(), alreadyInCart))
+                        .showAndWait();
+                return;
+            }
+
+            cartData.stream()
+                    .filter(line -> line.getItem().getItemId() == selected.getItemId())
+                    .findFirst()
+                    .ifPresentOrElse(
+                            existing -> existing.setQuantity(existing.getQuantity() + qty),
+                            () -> {
+                                CartLine newLine = new CartLine(selected);
+                                newLine.setQuantity(qty);
+                                cartData.add(newLine);
+                            }
+                    );
+            updateTotal();
+            cartTable.refresh();
+        });
     }
 
     private void onRemoveLine() {
