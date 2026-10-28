@@ -90,13 +90,18 @@ src/main/resources/
 
 ## UI theme
 
-The app uses [AtlantaFX](https://github.com/mkpaz/atlantafx) (`CupertinoLight`) for a
-modern flat look, on top of which `styles.css` adds status pill badges and
-KPI card styling. To switch themes, change the one line in `App.java`:
+The app uses [AtlantaFX](https://github.com/mkpaz/atlantafx) (`CupertinoLight`) as the base theme.
+`src/main/resources/styles.css` sits on top of it and holds the whole visual system:
 
-```java
-Application.setUserAgentStylesheet(new CupertinoLight().getUserAgentStylesheet());
-```
+- **Tokens** at the top (`.root`): one brand accent (indigo `#4f46e5`) that also overrides
+  AtlantaFX's own accent, plus neutrals and status colours. Change the accent there and
+  the sidebar, buttons, selections, charts and focus rings all follow.
+- App shell (sidebar, page headers, cards), data tables, status pills, KPI cards, forms,
+  login, sales calendar and checkout styles, in that order.
 
-to `PrimerLight`, `PrimerDark`, `NordLight`, `NordDark`, `CupertinoDark`, or `Dracula`
-(all in `atlantafx.base.theme`).
+Shared UI pieces live in `ui/Ui.java` (page header, cards, money/number cells, empty states,
+dialog styling) and `ui/Icons.java` (a small vector icon set, no icon font or emoji needed).
+
+Keyboard shortcuts: **Ctrl+1–5** switch screens, **Ctrl+N** adds an item, **Ctrl+F** searches
+inventory, **Enter/Del** edit/remove the selected item, and in Checkout **Enter** in the search
+box adds the top match.

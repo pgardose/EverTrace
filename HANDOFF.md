@@ -57,6 +57,22 @@ Both are in `pom.xml` as requested, but I didn't retrofit existing model classes
 
 **Not verified:** the real AtlantaFX theme (only a stub compiled here), `jpackage`, keyboard behaviour on the user's machine (see number-key issue below).
 
+## Pass 6 (UI overhaul)
+
+Visual and usability pass; business logic and the database are unchanged except one read-only fix.
+
+- **Design system**: `styles.css` rewritten around tokens; brand accent overrides AtlantaFX's accent so theme buttons and custom pieces match (they were two different blues). AtlantaFX's danger red darkened to `#dc2626` for 4.5:1 text contrast.
+- **Icons**: emoji KPI icons (which rendered as blanks/boxes) replaced by `ui/Icons.java` vector paths. Ikonli is still unused.
+- **Shell**: branded sidebar with icons, active state, keyboard focus ring (`:focus-visible`, JavaFX 19+), user chip, Ctrl+1–5 shortcuts. Removed the theme's text shadow on nav buttons.
+- **Tables**: constrained column widths (no empty filler column, no "COMPLET..." truncation), money formatted and right-aligned everywhere, name+SKU two-line cells, soft status pills, thumbnail placeholders, click-to-enlarge photos via `PhotoViewer` (it existed but wasn't wired up), friendly empty states.
+- **Inventory**: primary "Add item", selection-aware Edit/Restock/Delete, category + status filters, result count, double-click to edit, Del/Enter/Ctrl+F/Ctrl+N; delete confirmations default to Cancel.
+- **Checkout**: product search (Enter adds top match), inline quantity spinner instead of a popup, double-click to add, summary with item count and large total. "Confirm sale" is intentionally not the default button anymore, so a stray Enter can't complete a sale.
+- **Orders**: date column (`OrderDao.findAll()` now reads `order_date`, previously never loaded), status filter + search, detail panel with line totals and a disabled-unless-completed Cancel button.
+- **Sales**: segmented Day/Week/Month, icon prev/next with accessible names, calendar cells focusable and openable with Enter/Space.
+- **Forms**: labels above every field (login, item, password, categories), required markers, per-field red borders plus an error summary, focus moves to the first bad field, dialogs grow to fit errors. AtlantaFX caps dialog panes at 600px; `.app-dialog` lifts it.
+
+Verified by compiling against JavaFX 11 + a source build of AtlantaFX 2.0.1 (with its real compiled Sass CSS) and screenshotting every screen and dialog under Xvfb with seeded data. Not verified on JavaFX 21 / Windows specifically; `TableView.CONSTRAINED_RESIZE_POLICY` will show a deprecation warning there (harmless).
+
 ## Open issues from the user's machine
 - Number keys don't type in JavaFX windows only (other apps fine). Unresolved; `KeyTest.java` was given to the user, no result yet.
 - Some files red in IntelliJ with JDK 25: waiting on Build output (likely Maven reimport / language level).

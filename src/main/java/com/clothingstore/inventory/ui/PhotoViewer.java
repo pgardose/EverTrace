@@ -24,6 +24,7 @@ public final class PhotoViewer {
         view.setPreserveRatio(true);
 
         Dialog<Void> dialog = new Dialog<>();
+        Ui.style(dialog);
         dialog.setTitle(title == null || title.isBlank() ? "Photo" : title);
         dialog.getDialogPane().setContent(view);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);

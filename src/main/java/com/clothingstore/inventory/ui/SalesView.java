@@ -15,8 +15,6 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -55,10 +53,7 @@ public class SalesView extends BorderPane {
 
     public SalesView(SalesService salesService) {
         this.salesService = salesService;
-        setPadding(new Insets(20));
-
-        Label title = new Label("Sales");
-        title.setFont(Font.font(null, FontWeight.BOLD, 22));
+        setPadding(new Insets(28, 32, 28, 32));
 
         dayToggle.setToggleGroup(modeGroup);
         weekToggle.setToggleGroup(modeGroup);
@@ -78,11 +73,12 @@ public class SalesView extends BorderPane {
                 if (t.isSelected()) e.consume();
             });
         }
-        HBox toggles = new HBox(0, dayToggle, weekToggle, monthToggle);
+        HBox toggles = new HBox(2, dayToggle, weekToggle, monthToggle);
+        toggles.getStyleClass().add("segmented");
 
-        Button prev = new Button("◀");
+        Button prev = Ui.iconButton("chevron-left", "Previous period");
         prev.setOnAction(e -> shift(-1));
-        Button next = new Button("▶");
+        Button next = Ui.iconButton("chevron-right", "Next period");
         next.setOnAction(e -> shift(1));
         Button today = new Button("Today");
         today.setOnAction(e -> {
@@ -90,11 +86,13 @@ public class SalesView extends BorderPane {
             render();
         });
 
-        periodLabel.setFont(Font.font(null, FontWeight.BOLD, 16));
-        periodLabel.setMinWidth(270);
+        periodLabel.getStyleClass().add("card-title");
+        periodLabel.setMinWidth(250);
         periodLabel.setAlignment(Pos.CENTER);
 
         datePicker.setEditable(false);
+        datePicker.setAccessibleText("Jump to date");
+        datePicker.setPrefWidth(150);
         datePicker.valueProperty().addListener((obs, old, picked) -> {
             if (!updatingPicker && picked != null) {
                 anchor = picked;
@@ -104,17 +102,18 @@ public class SalesView extends BorderPane {
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox controls = new HBox(10, toggles, spacer, prev, periodLabel, next, today, datePicker);
+        HBox controls = new HBox(8, prev, periodLabel, next, today, spacer, datePicker, toggles);
         controls.setAlignment(Pos.CENTER_LEFT);
-        controls.setPadding(new Insets(12, 0, 12, 0));
 
         statTiles.setPadding(new Insets(0, 0, 16, 0));
 
-        ScrollPane scroll = new ScrollPane(body);
+        VBox bodyCard = Ui.card(null, controls, body);
+        ScrollPane scroll = new ScrollPane(new VBox(statTiles, bodyCard));
         scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background-color: transparent;");
+        scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0;");
 
-        setTop(new VBox(4, title, controls, statTiles));
+        Label subtitle = new Label("Completed orders only. Click any day to see its orders.");
+        setTop(Ui.pageHeader("Sales", subtitle));
         setCenter(scroll);
 
         render();
@@ -158,9 +157,9 @@ public class SalesView extends BorderPane {
         }
 
         statTiles.getChildren().setAll(
-                KpiCard.create("💰", "Total sales", Money.peso(total.total())),
-                KpiCard.create("🧾", "Orders", String.valueOf(total.orders())),
-                KpiCard.create("📊", "Average order", Money.peso(total.average()))
+                KpiCard.create("coins", "accent", "Total sales", Money.peso(total.total()), null),
+                KpiCard.create("receipt", "accent", "Orders", String.valueOf(total.orders()), null),
+                KpiCard.create("chart", "accent", "Average order", Money.peso(total.average()), null)
         );
 
         Node view = switch (mode) {
@@ -250,23 +249,27 @@ public class SalesView extends BorderPane {
         }
 
         TableView<Order> table = new TableView<>();
-        TableColumn<Order, String> idCol = new TableColumn<>("Order");
+        Ui.setupTable(table);
+        TableColumn<Order, String> idCol = new TableColumn<>("ORDER");
         idCol.setCellValueFactory(c -> new SimpleStringProperty("#" + c.getValue().getOrderId()));
-        TableColumn<Order, String> timeCol = new TableColumn<>("Time");
+        TableColumn<Order, String> timeCol = new TableColumn<>("TIME");
         timeCol.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getOrderDate().format(DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH))));
-        TableColumn<Order, String> customerCol = new TableColumn<>("Customer");
+        TableColumn<Order, String> customerCol = new TableColumn<>("CUSTOMER");
         customerCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCustomerName()));
         customerCol.setPrefWidth(200);
-        TableColumn<Order, String> totalCol = new TableColumn<>("Total");
-        totalCol.setCellValueFactory(c -> new SimpleStringProperty(Money.peso(c.getValue().getTotalAmount())));
+        TableColumn<Order, Number> totalCol = new TableColumn<>("TOTAL");
+        totalCol.setCellValueFactory(c -> new javafx.beans.property.SimpleDoubleProperty(c.getValue().getTotalAmount()));
+        totalCol.setCellFactory(col -> Ui.moneyCell());
+        totalCol.getStyleClass().add("numeric");
         totalCol.setPrefWidth(140);
-        TableColumn<Order, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus().name()));
+        TableColumn<Order, Order.OrderStatus> statusCol = new TableColumn<>("STATUS");
+        statusCol.setCellValueFactory(c -> new javafx.beans.property.SimpleObjectProperty<>(c.getValue().getStatus()));
+        statusCol.setCellFactory(col -> Ui.orderStatusCell());
         statusCol.setPrefWidth(130);
         table.getColumns().setAll(List.of(idCol, timeCol, customerCol, totalCol, statusCol));
         table.setItems(FXCollections.observableArrayList(salesService.ordersOn(anchor)));
-        table.setPlaceholder(new Label("No sales on this day."));
+        table.setPlaceholder(Ui.emptyState("receipt", "No sales on this day", "Orders completed on this date will show here."));
         table.setPrefHeight(240);
 
         return new VBox(12, sectionTitle("Sales by hour"), chart(labels, values),
@@ -292,16 +295,30 @@ public class SalesView extends BorderPane {
         if (date.equals(LocalDate.now())) cell.getStyleClass().add("cal-cell-today");
         if (!inMonth) cell.getStyleClass().add("cal-cell-outside");
         if (max > 0 && sales.total() > 0) {
-            // Busier days get a stronger blue tint; capped so the text stays readable.
-            double alpha = 0.08 + 0.27 * (sales.total() / max);
-            cell.setStyle("-fx-background-color: rgba(37, 99, 235, " + String.format(Locale.ROOT, "%.2f", alpha) + ");");
+            // Busier days get a stronger accent tint; capped so the text stays readable.
+            double alpha = 0.06 + 0.26 * (sales.total() / max);
+            cell.setStyle("-fx-background-color: rgba(79, 70, 229, " + String.format(Locale.ROOT, "%.2f", alpha) + ");");
         }
         cell.setMinHeight(84);
         cell.setMaxWidth(Double.MAX_VALUE);
-        cell.setOnMouseClicked(e -> {
+        Runnable open = () -> {
             anchor = date;
-            dayToggle.setSelected(true); // the toggle listener switches to Day mode and re-renders
+            if (dayToggle.isSelected()) render();
+            else dayToggle.setSelected(true); // the toggle listener switches to Day mode and re-renders
+        };
+        cell.setOnMouseClicked(e -> open.run());
+        // Keyboard: Tab to a day, Enter/Space opens it.
+        cell.setFocusTraversable(true);
+        cell.setOnKeyPressed(e -> {
+            if (e.getCode() == javafx.scene.input.KeyCode.ENTER || e.getCode() == javafx.scene.input.KeyCode.SPACE) {
+                e.consume();
+                open.run();
+            }
         });
+        cell.setAccessibleRole(javafx.scene.AccessibleRole.BUTTON);
+        cell.setAccessibleText(date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)) + ": "
+                + (sales.orders() == 0 ? "no sales" : Money.peso(sales.total()) + ", " + sales.orders()
+                + (sales.orders() == 1 ? " order" : " orders")));
         return cell;
     }
 
@@ -329,7 +346,7 @@ public class SalesView extends BorderPane {
 
     private Label sectionTitle(String text) {
         Label label = new Label(text);
-        label.setFont(Font.font(null, FontWeight.SEMI_BOLD, 15));
+        label.getStyleClass().add("card-title");
         return label;
     }
 
