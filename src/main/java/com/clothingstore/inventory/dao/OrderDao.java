@@ -45,6 +45,12 @@ public class OrderDao {
                 order.setOrderId(rs.getInt("order_id"));
                 order.setTotalAmount(rs.getDouble("total_amount"));
                 order.setStatus(Order.OrderStatus.valueOf(rs.getString("status")));
+                // Stored as ISO local date-time; the Orders screen shows it. Tolerate odd rows.
+                try {
+                    order.setOrderDate(java.time.LocalDateTime.parse(rs.getString("order_date")));
+                } catch (RuntimeException ignored) {
+                    order.setOrderDate(null);
+                }
                 orders.add(order);
             }
         } catch (SQLException e) {

@@ -27,24 +27,28 @@ public class LoginView extends StackPane {
     public LoginView(AuthService authService, Consumer<User> onSuccess) {
         boolean setupMode = authService.isSetupRequired();
 
-        Label title = new Label("Clothing Store Inventory");
+        StackPane mark = new StackPane(Icons.styled("shirt", 22, "icon-white"));
+        mark.getStyleClass().add("brand-mark");
+        mark.setMinSize(44, 44);
+        mark.setMaxSize(44, 44);
+
+        Label title = new Label(setupMode ? "Set up EverTrace" : "Welcome back");
         title.getStyleClass().add("login-title");
 
         Label subtitle = new Label(setupMode
-                ? "Welcome! Create the owner account to get started."
-                : "Sign in to continue");
+                ? "Create the owner account for this store. You'll use it to sign in from now on."
+                : "Sign in to manage your store's inventory and sales.");
         subtitle.getStyleClass().add("login-subtitle");
         subtitle.setWrapText(true);
 
         TextField usernameField = new TextField();
-        usernameField.setPromptText("Username");
+        usernameField.setPromptText(setupMode ? "e.g. maria" : "");
 
         PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
 
         // "Show password" swaps in a plain TextField sharing the same text.
         TextField passwordPlain = new TextField();
-        passwordPlain.setPromptText("Password");
+        passwordPlain.setAccessibleText("Password");
         passwordPlain.textProperty().bindBidirectional(passwordField.textProperty());
         CheckBox showPassword = new CheckBox("Show password");
         passwordPlain.visibleProperty().bind(showPassword.selectedProperty());
@@ -53,7 +57,6 @@ public class LoginView extends StackPane {
         passwordField.managedProperty().bind(showPassword.selectedProperty().not());
 
         PasswordField confirmField = new PasswordField();
-        confirmField.setPromptText("Confirm password");
 
         Label hint = new Label("At least " + AuthService.MIN_PASSWORD_LENGTH
                 + " characters, with a letter and a number.");
@@ -62,6 +65,7 @@ public class LoginView extends StackPane {
 
         Label error = new Label();
         error.getStyleClass().add("login-error");
+        error.setMaxWidth(Double.MAX_VALUE);
         error.setWrapText(true);
         error.visibleProperty().bind(error.textProperty().isNotEmpty());
         error.managedProperty().bind(error.textProperty().isNotEmpty());
@@ -69,7 +73,7 @@ public class LoginView extends StackPane {
         Button submit = new Button(setupMode ? "Create account" : "Sign in");
         submit.setDefaultButton(true);
         submit.setMaxWidth(Double.MAX_VALUE);
-        submit.getStyleClass().add("login-button");
+        submit.getStyleClass().addAll("accent", "large");
 
         submit.setOnAction(e -> {
             error.setText("");
@@ -92,18 +96,38 @@ public class LoginView extends StackPane {
             }
         });
 
-        VBox card = new VBox(12, title, subtitle, usernameField, passwordField, passwordPlain, showPassword);
+        // Visible labels above each field: placeholder text disappears as soon as
+        // you type, so it can't be the only label.
+        VBox passwordBox = Ui.field("Password", passwordField);
+        Label passwordLabel = (Label) passwordBox.getChildren().get(0);
+        showPassword.selectedProperty().addListener((o, was, isShown) ->
+                passwordLabel.setLabelFor(isShown ? passwordPlain : passwordField));
+        passwordBox.getChildren().add(passwordPlain);
+
+        VBox heading = new VBox(6, title, subtitle);
+        heading.setPadding(new javafx.geometry.Insets(6, 0, 6, 0));
+
+        VBox card = new VBox(14, mark, heading, Ui.field("Username", usernameField), passwordBox);
         if (setupMode) {
-            card.getChildren().addAll(confirmField, hint);
+            VBox confirmBox = Ui.field("Confirm password", confirmField);
+            confirmBox.getChildren().add(hint);
+            card.getChildren().add(confirmBox);
         }
-        card.getChildren().addAll(error, submit);
+        card.getChildren().addAll(showPassword, error, submit);
         card.getStyleClass().add("login-card");
-        card.setMaxWidth(400);
+        card.setMaxWidth(380);
         card.setMaxHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
         card.setAlignment(Pos.CENTER_LEFT);
 
+        Label footer = new Label("Your data is stored only on this computer.");
+        footer.getStyleClass().add("login-footer");
+        VBox column = new VBox(16, card, footer);
+        column.setAlignment(Pos.CENTER);
+        column.setMaxWidth(380);
+        column.setMaxHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+
         getStyleClass().add("login-root");
-        getChildren().add(card);
+        getChildren().add(column);
         setAlignment(Pos.CENTER);
 
         Platform.runLater(usernameField::requestFocus);

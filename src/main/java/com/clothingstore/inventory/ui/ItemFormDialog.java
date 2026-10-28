@@ -9,9 +9,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -27,6 +25,8 @@ public class ItemFormDialog extends Dialog<Item> {
     // Tracks the newly picked file (if any) separately from the item's existing
     // stored path, so we only copy it into images/ once Save is actually clicked --
     // picking an image and then hitting Cancel shouldn't leave orphan files behind.
+    private static final double PHOTO_SIZE = 168;
+
     private File pickedImageFile;
     private String existingImagePath;
 
@@ -41,7 +41,8 @@ public class ItemFormDialog extends Dialog<Item> {
      *                       auto-generation never runs in edit mode.
      */
     public ItemFormDialog(List<Category> categories, Item existing, List<Item> existingItems) {
-        setTitle(existing == null ? "Add New Item" : "Edit Item");
+        setTitle(existing == null ? "Add item" : "Edit item");
+        Ui.style(this);
         existingImagePath = existing != null ? existing.getImagePath() : null;
 
         TextField skuField = new TextField(existing != null ? existing.getSku() : "");
@@ -81,12 +82,34 @@ public class ItemFormDialog extends Dialog<Item> {
         colorField.textProperty().addListener((o, ov, nv) -> regenerateSku.run());
 
         ImageView preview = new ImageView();
-        preview.setFitWidth(100);
-        preview.setFitHeight(100);
+        preview.setFitWidth(PHOTO_SIZE);
+        preview.setFitHeight(PHOTO_SIZE);
         preview.setPreserveRatio(true);
         loadPreview(preview, existingImagePath);
 
-        Button chooseImageBtn = new Button(existingImagePath == null ? "Choose Image..." : "Change Image...");
+        // Placeholder shown in the photo tile until there's an image.
+        Label noPhoto = new Label("No photo yet");
+        noPhoto.getStyleClass().add("field-hint");
+        VBox placeholder = new VBox(6, Icons.styled("image", 28, "icon-subtle"), noPhoto);
+        placeholder.setAlignment(Pos.CENTER);
+        placeholder.visibleProperty().bind(preview.imageProperty().isNull());
+        StackPane photoTile = new StackPane(placeholder, preview);
+        photoTile.getStyleClass().add("photo-drop");
+        photoTile.setMinSize(PHOTO_SIZE + 16, PHOTO_SIZE + 16);
+        photoTile.setMaxSize(PHOTO_SIZE + 16, PHOTO_SIZE + 16);
+
+        Button chooseImageBtn = Ui.button(existingImagePath == null ? "Choose photo…" : "Change photo…", "image");
+        chooseImageBtn.setMaxWidth(Double.MAX_VALUE);
+        Button removeImageBtn = Ui.button("Remove photo", null, "flat", "danger");
+        removeImageBtn.setMaxWidth(Double.MAX_VALUE);
+        removeImageBtn.visibleProperty().bind(preview.imageProperty().isNotNull());
+        removeImageBtn.managedProperty().bind(removeImageBtn.visibleProperty());
+        removeImageBtn.setOnAction(e -> {
+            pickedImageFile = null;
+            existingImagePath = null;
+            preview.setImage(null);
+            chooseImageBtn.setText("Choose photo…");
+        });
         chooseImageBtn.setOnAction(e -> {
             FileChooser chooser = new FileChooser();
             chooser.setTitle("Select Item Photo");
@@ -95,17 +118,26 @@ public class ItemFormDialog extends Dialog<Item> {
             File selected = chooser.showOpenDialog(getDialogPane().getScene().getWindow());
             if (selected != null) {
                 pickedImageFile = selected;
-                preview.setImage(new Image(selected.toURI().toString(), 100, 100, true, true));
+                preview.setImage(new Image(selected.toURI().toString(), PHOTO_SIZE, PHOTO_SIZE, true, true));
+                chooseImageBtn.setText("Change photo…");
             }
         });
 
-        VBox imageBox = new VBox(8, preview, chooseImageBtn);
-        imageBox.setAlignment(Pos.TOP_CENTER);
+        Label photoHint = new Label("PNG, JPG or GIF. Shown in Inventory and Checkout.");
+        photoHint.getStyleClass().add("field-hint");
+        photoHint.setWrapText(true);
+        photoHint.setMaxWidth(PHOTO_SIZE + 16);
+        VBox imageBox = new VBox(10, Ui.sectionLabel("PHOTO"), photoTile, chooseImageBtn, removeImageBtn, photoHint);
+        imageBox.setAlignment(Pos.TOP_LEFT);
+        imageBox.setMinWidth(PHOTO_SIZE + 16);
 
         Label errorLabel = new Label();
-        errorLabel.setTextFill(Color.web("#dc2626"));
+        errorLabel.getStyleClass().add("form-error");
         errorLabel.setWrapText(true);
-        errorLabel.setMaxWidth(320);
+        errorLabel.setMaxWidth(Double.MAX_VALUE);
+        errorLabel.setMinHeight(Region.USE_PREF_SIZE);
+        errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
+        errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
         if (existing != null) {
             categories.stream()
@@ -114,24 +146,60 @@ public class ItemFormDialog extends Dialog<Item> {
                     .ifPresent(categoryBox::setValue);
         }
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(16));
-        int r = 0;
-        grid.addRow(r++, new Label("SKU:"), skuField);
-        grid.addRow(r++, new Label("Name:"), nameField);
-        grid.addRow(r++, new Label("Category:"), categoryBox);
-        grid.addRow(r++, new Label("Size:"), sizeField);
-        grid.addRow(r++, new Label("Color:"), colorField);
-        grid.addRow(r++, new Label("Price:"), priceField);
-        grid.addRow(r++, new Label("Quantity:"), quantityField);
-        grid.addRow(r++, new Label("Reorder Threshold:"), reorderField);
-        grid.addRow(r++, new Label("Photo:"), imageBox);
-        grid.add(errorLabel, 0, r, 2, 1);
+        // ---- layout: header, then photo on the left and the form in a 2-column grid
+        nameField.setPromptText("e.g. Classic Crew Tee");
+        sizeField.setPromptText("e.g. M, 32, OS");
+        colorField.setPromptText("e.g. Black");
+        priceField.setPromptText("0.00");
+        categoryBox.setPromptText("Choose…");
+        categoryBox.setMaxWidth(Double.MAX_VALUE);
+        Label skuHint = new Label(existing == null ? "Filled in automatically from category, color and size." : " ");
+        skuHint.getStyleClass().add("field-hint");
+        skuHint.setWrapText(true);
+        Label qtyHint = new Label(existing == null ? "Starting stock." : "Tip: Restock keeps a log.");
+        qtyHint.getStyleClass().add("field-hint");
+        Label reorderHint = new Label("Flag as low stock at or below this.");
+        reorderHint.getStyleClass().add("field-hint");
+        reorderHint.setWrapText(true);
 
-        getDialogPane().setContent(grid);
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        GridPane grid = new GridPane();
+        grid.setHgap(14);
+        grid.setVgap(12);
+        ColumnConstraints c1 = new ColumnConstraints(150, 190, Double.MAX_VALUE);
+        c1.setHgrow(Priority.ALWAYS);
+        ColumnConstraints c2 = new ColumnConstraints(150, 190, Double.MAX_VALUE);
+        c2.setHgrow(Priority.ALWAYS);
+        grid.getColumnConstraints().addAll(c1, c2);
+        int r = 0;
+        grid.add(Ui.sectionLabel("DETAILS"), 0, r++, 2, 1);
+        grid.add(required(Ui.field("Name", nameField)), 0, r++, 2, 1);
+        grid.add(required(Ui.field("Category", categoryBox)), 0, r);
+        VBox skuBox = required(Ui.field("SKU", skuField));
+        skuBox.getChildren().add(skuHint);
+        grid.add(skuBox, 1, r++);
+        grid.add(Ui.field("Size", sizeField), 0, r);
+        grid.add(Ui.field("Color", colorField), 1, r++);
+        grid.add(Ui.sectionLabel("PRICING & STOCK"), 0, r++, 2, 1);
+        grid.add(required(Ui.field("Price (₱)", priceField)), 0, r);
+        VBox qtyBox = required(Ui.field("Quantity", quantityField));
+        qtyBox.getChildren().add(qtyHint);
+        grid.add(qtyBox, 1, r++);
+        VBox reorderBox = required(Ui.field("Reorder threshold", reorderField));
+        reorderBox.getChildren().add(reorderHint);
+        grid.add(reorderBox, 0, r++);
+
+        Label heading = new Label(existing == null ? "Add a new item" : "Edit “" + existing.getName() + "”");
+        heading.getStyleClass().add("dialog-title");
+        Label sub = new Label("Fields marked * are required.");
+        sub.getStyleClass().add("field-hint");
+
+        HBox columns = new HBox(24, imageBox, grid);
+        HBox.setHgrow(grid, Priority.ALWAYS);
+        VBox root = new VBox(16, new VBox(4, heading, sub), errorLabel, columns);
+        root.setPadding(new Insets(20, 20, 8, 20));
+
+        getDialogPane().setContent(root);
+        ButtonType saveButtonType = new ButtonType(existing == null ? "Add item" : "Save changes", ButtonBar.ButtonData.OK_DONE);
         getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
 
         // Validate on click and CONSUME the event (keeps the dialog open) if anything's wrong,
@@ -140,8 +208,21 @@ public class ItemFormDialog extends Dialog<Item> {
         saveButton.addEventFilter(ActionEvent.ACTION, event -> {
             List<String> errors = validate(skuField, nameField, categoryBox, priceField, quantityField, reorderField);
             if (!errors.isEmpty()) {
-                errorLabel.setText(String.join(" \u2022 ", errors));
+                errorLabel.setText(errors.size() == 1
+                        ? errors.get(0) + "."
+                        : "Please fix the highlighted fields:\n\u2022 " + String.join("\n\u2022 ", errors));
                 event.consume();
+                // The banner adds height; grow the window so the buttons stay visible.
+                javafx.application.Platform.runLater(() -> getDialogPane().getScene().getWindow().sizeToScene());
+                // Move focus to the first problem so keyboard users land on it.
+                for (Control c : List.of(nameField, categoryBox, skuField, priceField, quantityField, reorderField)) {
+                    if (c.getStyleClass().contains("invalid")) {
+                        c.requestFocus();
+                        break;
+                    }
+                }
+            } else {
+                errorLabel.setText("");
             }
         });
 
@@ -165,7 +246,9 @@ public class ItemFormDialog extends Dialog<Item> {
             // Only copy the file into images/ now that Save was actually confirmed.
             if (pickedImageFile != null) {
                 item.setImagePath(ImageStorage.store(pickedImageFile.toPath()));
-            } else if (existingImagePath != null) {
+            } else {
+                // Either the existing photo, or null if "Remove photo" was used.
+                // (The old file stays on disk; past data never points at a missing image.)
                 item.setImagePath(existingImagePath);
             }
 
@@ -207,7 +290,7 @@ public class ItemFormDialog extends Dialog<Item> {
         if (imagePath == null || imagePath.isBlank()) return;
         File file = ImageStorage.resolve(imagePath).toFile();
         if (file.exists()) {
-            view.setImage(new Image(file.toURI().toString(), 100, 100, true, true));
+            view.setImage(new Image(file.toURI().toString(), PHOTO_SIZE, PHOTO_SIZE, true, true));
         }
     }
 
@@ -220,24 +303,46 @@ public class ItemFormDialog extends Dialog<Item> {
                                    TextField priceField, TextField quantityField, TextField reorderField) {
         List<String> errors = new ArrayList<>();
 
-        if (skuField.getText() == null || skuField.getText().isBlank()) {
-            errors.add("SKU is required");
-        }
-        if (nameField.getText() == null || nameField.getText().isBlank()) {
-            errors.add("Name is required");
-        }
-        if (categoryBox.getValue() == null) {
-            errors.add("Category is required");
-        }
+        boolean nameBad = nameField.getText() == null || nameField.getText().isBlank();
+        if (nameBad) errors.add("Name is required");
+        boolean categoryBad = categoryBox.getValue() == null;
+        if (categoryBad) errors.add("Category is required");
+        boolean skuBad = skuField.getText() == null || skuField.getText().isBlank();
+        if (skuBad) errors.add("SKU is required");
 
-        errors.addAll(checkNonNegativeNumber(priceField.getText(), "Price"));
-        errors.addAll(checkNonNegativeInteger(quantityField.getText(), "Quantity"));
-        errors.addAll(checkNonNegativeInteger(reorderField.getText(), "Reorder threshold"));
+        List<String> price = checkNonNegativeNumber(priceField.getText(), "Price");
+        List<String> qty = checkNonNegativeInteger(quantityField.getText(), "Quantity");
+        List<String> reorder = checkNonNegativeInteger(reorderField.getText(), "Reorder threshold");
+        errors.addAll(price);
+        errors.addAll(qty);
+        errors.addAll(reorder);
+
+        markInvalid(nameField, nameBad);
+        markInvalid(categoryBox, categoryBad);
+        markInvalid(skuField, skuBad);
+        markInvalid(priceField, !price.isEmpty());
+        markInvalid(quantityField, !qty.isEmpty());
+        markInvalid(reorderField, !reorder.isEmpty());
 
         return errors;
     }
 
+    /** Red border + accessible hint on a field with a problem; cleared once it's fixed. */
+    private static void markInvalid(Control field, boolean invalid) {
+        field.getStyleClass().remove("invalid");
+        if (invalid) field.getStyleClass().add("invalid");
+        field.setAccessibleHelp(invalid ? "This field has a problem" : null);
+    }
+
+    /** Appends a "*" to a field's label to mark it as required. */
+    private static VBox required(VBox fieldBox) {
+        Label label = (Label) fieldBox.getChildren().get(0);
+        label.setText(label.getText() + " *");
+        return fieldBox;
+    }
+
     private List<String> checkNonNegativeNumber(String text, String fieldName) {
+        if (text == null) text = "";
         try {
             double value = Double.parseDouble(text.trim());
             if (value < 0) {
@@ -250,6 +355,7 @@ public class ItemFormDialog extends Dialog<Item> {
     }
 
     private List<String> checkNonNegativeInteger(String text, String fieldName) {
+        if (text == null) text = "";
         try {
             int value = Integer.parseInt(text.trim());
             if (value < 0) {

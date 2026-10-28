@@ -10,18 +10,25 @@ import com.clothingstore.inventory.service.SalesService;
 import com.clothingstore.inventory.ui.ChangePasswordDialog;
 import com.clothingstore.inventory.ui.CheckoutView;
 import com.clothingstore.inventory.ui.DashboardView;
+import com.clothingstore.inventory.ui.Icons;
 import com.clothingstore.inventory.ui.InventoryView;
 import com.clothingstore.inventory.ui.LoginView;
 import com.clothingstore.inventory.ui.OrdersView;
 import com.clothingstore.inventory.ui.SalesView;
 import javafx.application.Application;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -37,6 +44,8 @@ import java.util.function.Consumer;
  * launch, "create the owner account"), then shows the main window.
  */
 public class App extends Application {
+
+    static final String APP_NAME = "EverTrace";
 
     private Stage stage;
 
@@ -69,7 +78,7 @@ public class App extends Application {
         orderService = new OrderService(itemDao, orderDao, stockTransactionDao);
         salesService = new SalesService(new SalesDao());
 
-        stage.setTitle("Clothing Store Inventory System");
+        stage.setTitle(APP_NAME + " \u2014 Clothing Store Inventory");
         showLogin();
         stage.show();
     }
@@ -109,16 +118,20 @@ public class App extends Application {
         content.getChildren().addAll(dashboardView, inventoryView, checkoutView, ordersView, salesView);
         showOnly(content, dashboardView);
 
-        Button dashboardBtn = navButton("Dashboard");
-        Button inventoryBtn = navButton("Inventory");
-        Button checkoutBtn = navButton("Checkout");
-        Button ordersBtn = navButton("Orders");
-        Button salesBtn = navButton("Sales");
+        Button dashboardBtn = navButton("Dashboard", "dashboard", "Ctrl+1");
+        Button inventoryBtn = navButton("Inventory", "box", "Ctrl+2");
+        Button checkoutBtn = navButton("Checkout", "cart", "Ctrl+3");
+        Button ordersBtn = navButton("Orders", "receipt", "Ctrl+4");
+        Button salesBtn = navButton("Sales", "chart", "Ctrl+5");
         List<Button> navButtons = List.of(dashboardBtn, inventoryBtn, checkoutBtn, ordersBtn, salesBtn);
 
         Consumer<Button> markActive = active -> {
-            for (Button b : navButtons) b.getStyleClass().remove("active");
+            for (Button b : navButtons) {
+                b.getStyleClass().remove("active");
+                b.setAccessibleHelp(null);
+            }
             active.getStyleClass().add("active");
+            active.setAccessibleHelp("Current page");
         };
         dashboardBtn.setOnAction(e -> {
             dashboardView.refresh();
@@ -147,35 +160,81 @@ public class App extends Application {
         });
         markActive.accept(dashboardBtn);
 
-        Label signedInAs = new Label("Signed in as " + user.username());
-        signedInAs.getStyleClass().add("nav-footer-label");
-        Button changePasswordBtn = navButton("Change password");
+        // ---- brand
+        StackPane mark = new StackPane(Icons.styled("shirt", 18, "icon-white"));
+        mark.getStyleClass().add("brand-mark");
+        mark.setMinSize(34, 34);
+        mark.setMaxSize(34, 34);
+        Label brandName = new Label(APP_NAME);
+        brandName.getStyleClass().add("brand-name");
+        Label tagline = new Label("Clothing inventory");
+        tagline.getStyleClass().add("brand-tagline");
+        HBox brand = new HBox(10, mark, new VBox(0, brandName, tagline));
+        brand.setAlignment(Pos.CENTER_LEFT);
+        brand.setPadding(new Insets(0, 4, 10, 4));
+
+        Label menuLabel = new Label("MENU");
+        menuLabel.getStyleClass().add("nav-section");
+
+        // ---- signed-in user
+        Label initial = new Label(user.username().isEmpty() ? "?" : user.username().substring(0, 1).toUpperCase());
+        initial.getStyleClass().add("avatar-text");
+        StackPane avatar = new StackPane(initial);
+        avatar.getStyleClass().add("avatar");
+        avatar.setMinSize(32, 32);
+        avatar.setMaxSize(32, 32);
+        Label userName = new Label(user.username());
+        userName.getStyleClass().add("user-name");
+        Label role = new Label("Owner");
+        role.getStyleClass().add("user-role");
+        HBox userChip = new HBox(10, avatar, new VBox(0, userName, role));
+        userChip.setAlignment(Pos.CENTER_LEFT);
+        userChip.getStyleClass().add("user-chip");
+        userChip.setAccessibleText("Signed in as " + user.username());
+
+        Button changePasswordBtn = navButton("Change password", "key", null);
+        changePasswordBtn.getStyleClass().add("small");
         changePasswordBtn.setOnAction(e ->
                 new ChangePasswordDialog(authService, user).showAndWait().ifPresent(changed -> {
                     if (changed) {
-                        new Alert(Alert.AlertType.INFORMATION, "Your password was changed.").showAndWait();
+                        Alert done = new Alert(Alert.AlertType.INFORMATION, "Your password was changed.");
+                        done.setHeaderText(null);
+                        done.initOwner(stage);
+                        done.showAndWait();
                     }
                 }));
-        Button logoutBtn = navButton("Log out");
+        Button logoutBtn = navButton("Log out", "logout", null);
+        logoutBtn.getStyleClass().add("small");
         logoutBtn.setOnAction(e -> showLogin());
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        VBox nav = new VBox(8);
+        VBox nav = new VBox(2);
+        nav.getChildren().addAll(brand, menuLabel);
         nav.getChildren().addAll(navButtons);
-        nav.getChildren().addAll(spacer, signedInAs, changePasswordBtn, logoutBtn);
+        nav.getChildren().addAll(spacer, userChip, new Region() {{ setMinHeight(6); }}, changePasswordBtn, logoutBtn);
         nav.getStyleClass().add("nav-sidebar");
-        nav.setPadding(new Insets(20, 12, 20, 12));
-        nav.setPrefWidth(170);
+        nav.setPadding(new Insets(20, 12, 16, 12));
+        nav.setPrefWidth(212);
+        nav.setMinWidth(212);
+
+        content.getStyleClass().add("app-content");
 
         BorderPane root = new BorderPane();
         root.setLeft(nav);
         root.setCenter(content);
 
-        show(root, 1150, 720);
-        stage.setMinWidth(980);
-        stage.setMinHeight(620);
+        Scene scene = show(root, 1240, 780);
+        // Ctrl+1..5 jump between screens (Cmd on macOS).
+        for (int i = 0; i < navButtons.size(); i++) {
+            Button target = navButtons.get(i);
+            scene.getAccelerators().put(
+                    new KeyCodeCombination(KeyCode.valueOf("DIGIT" + (i + 1)), KeyCombination.SHORTCUT_DOWN),
+                    target::fire);
+        }
+        stage.setMinWidth(1040);
+        stage.setMinHeight(660);
     }
 
     private Scene show(Parent root, double width, double height) {
@@ -187,10 +246,13 @@ public class App extends Application {
         return scene;
     }
 
-    private Button navButton(String text) {
+    private Button navButton(String text, String icon, String shortcut) {
         Button b = new Button(text);
         b.getStyleClass().add("nav-button");
         b.setMaxWidth(Double.MAX_VALUE);
+        Icons.on(b, icon, 17);
+        b.setGraphicTextGap(12);
+        if (shortcut != null) b.setTooltip(new Tooltip(text + "  (" + shortcut + ")"));
         return b;
     }
 

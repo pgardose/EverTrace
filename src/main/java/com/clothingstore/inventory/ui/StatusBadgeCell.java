@@ -5,9 +5,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 
 /**
- * Renders an ItemStatus as a colored pill badge (styles.css: .status-badge
- * plus a status-specific class) instead of plain text. This is the JavaFX
- * equivalent of a Swing custom TableCellRenderer.
+ * Renders an ItemStatus as a soft coloured pill (styles.css: .status-badge
+ * plus a status-specific class). The status is always written out in words,
+ * so colour is never the only signal.
  */
 public class StatusBadgeCell<S> extends TableCell<S, ItemStatus> {
 
@@ -15,6 +15,7 @@ public class StatusBadgeCell<S> extends TableCell<S, ItemStatus> {
 
     public StatusBadgeCell() {
         badge.getStyleClass().add("status-badge");
+        badge.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE); // never "Out of St..."
     }
 
     @Override

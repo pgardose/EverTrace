@@ -1,129 +1,445 @@
 /*
  * Loaded on top of the AtlantaFX base theme (set in App.java).
- * AtlantaFX handles the overall flat/modern look (buttons, fields, tables);
- * this file adds the two custom pieces the spec asked for that no
- * off-the-shelf theme provides: pill-style status badges and KPI cards.
+ *
+ * Structure:
+ *   1. Tokens          one place for the brand + neutral colours
+ *   2. App shell       sidebar, page header, cards
+ *   3. Tables / cells  data tables, badges, thumbnails, empty states
+ *   4. Screens         dashboard KPIs, login, sales calendar, checkout, forms
+ *
+ * JavaFX CSS note: comma-separated values mean stacked layers, not fallbacks,
+ * so every colour here is a single literal or a looked-up token.
  */
 
-/* ---------- Status badges ---------- */
-.status-badge {
-    -fx-padding: 3 10 3 10;
-    -fx-background-radius: 12;
+/* ===================================================== 1. Tokens */
+.root {
+    /* Brand accent (indigo). Overrides AtlantaFX's own accent so theme
+       buttons, focus rings, selections and our custom pieces all match. */
+    -et-accent: #4f46e5;
+    -et-accent-hover: #4338ca;
+    -et-accent-subtle: #eef2ff;
+    -et-accent-muted: #c7d2fe;
+
+    -color-accent-fg: #4f46e5;
+    -color-accent-emphasis: #4f46e5;
+    -color-accent-muted: #c7d2fe;
+    -color-accent-subtle: #eef2ff;
+
+    /* AtlantaFX's default red (#ff3b30) only gives white text ~3.5:1;
+       this one is 4.8:1, so "Delete" / "Cancel order" buttons stay readable. */
+    -color-danger-fg: #dc2626;
+    -color-danger-emphasis: #dc2626;
+
+    /* Neutrals */
+    -et-ink: #111827;
+    -et-text: #1f2937;
+    -et-text-muted: #6b7280;
+    -et-text-subtle: #9ca3af;
+    -et-border: #e5e7eb;
+    -et-surface: #ffffff;
+    -et-canvas: #f5f6f8;
+    -et-sidebar: #15161c;
+
+    /* Status (text colours are 4.5:1+ on their own tinted backgrounds) */
+    -et-success-bg: #dcfce7;  -et-success-fg: #166534;
+    -et-warning-bg: #fef3c7;  -et-warning-fg: #92400e;
+    -et-danger-bg:  #fee2e2;  -et-danger-fg:  #991b1b;
+    -et-neutral-bg: #f3f4f6;  -et-neutral-fg: #4b5563;
+}
+
+/* ===================================================== 2. App shell */
+.app-content {
+    -fx-background-color: -et-canvas;
+}
+
+/* ---------- Sidebar ---------- */
+.nav-sidebar {
+    -fx-background-color: -et-sidebar;
+}
+.brand-mark {
+    -fx-background-color: -et-accent;
+    -fx-background-radius: 10;
+}
+.brand-name {
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+.brand-tagline {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 11px;
+}
+.nav-section {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 14 0 4 12;
+}
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-text-fill: #d1d5db;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 8;
+    -fx-font-size: 13px;
+    -fx-effect: null;              /* the theme's button shadow blurred the text */
+    -fx-cursor: hand;
+}
+.nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.07);
+    -fx-text-fill: white;
+}
+.nav-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+}
+.nav-button.active {
+    -fx-background-color: rgba(129, 140, 248, 0.18);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+/* Keyboard focus ring (JavaFX 19+ pseudo-class; mouse clicks don't trigger it). */
+.nav-button:focus-visible {
+    -fx-border-color: #a5b4fc;
+}
+.nav-button.small {
+    -fx-font-size: 12px;
+    -fx-padding: 6 12 6 12;
+    -fx-text-fill: #9ca3af;
+}
+.nav-button.small:hover {
+    -fx-text-fill: white;
+}
+.nav-shortcut {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 10px;
+}
+.user-chip {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 10;
+    -fx-padding: 8 10 8 10;
+}
+.avatar {
+    -fx-background-color: -et-accent;
+    -fx-background-radius: 16;
+}
+.avatar-text {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+.user-name {
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+.user-role {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Page header ---------- */
+.page-header {
+    -fx-padding: 0 0 18 0;
+}
+.page-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -et-ink;
+}
+.page-subtitle, .muted {
+    -fx-font-size: 13px;
+    -fx-text-fill: -et-text-muted;
+}
+.section-label {
     -fx-font-size: 11px;
     -fx-font-weight: bold;
-    -fx-text-fill: white;
+    -fx-text-fill: -et-text-muted;
+    -fx-padding: 4 0 2 0;
+}
+
+/* ---------- Cards ---------- */
+.card {
+    -fx-background-color: -et-surface;
+    -fx-background-radius: 12;
+    -fx-border-color: -et-border;
+    -fx-border-radius: 12;
+    -fx-padding: 18;
+}
+.card-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -et-ink;
+}
+.card-header {
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* ---------- Buttons ---------- */
+.button {
+    -fx-cursor: hand;
+}
+.button.accent {
+    -fx-font-weight: bold;
+}
+.button.large {
+    -fx-font-size: 14px;
+    -fx-padding: 11 18 11 18;
+}
+.button-icon {
+    -fx-padding: 7;
+}
+
+/* ===================================================== 3. Tables and cells */
+.data-table {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+.data-table .column-header-background {
+    -fx-background-color: -et-surface;
+    -fx-border-color: transparent transparent -et-border transparent;
+}
+.data-table .column-header,
+.data-table .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-size: 36px;
+}
+.data-table .column-header .label {
+    -fx-text-fill: -et-text-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+}
+.data-table .table-row-cell {
+    -fx-border-color: transparent transparent #f0f1f3 transparent;
+    -fx-background-color: -et-surface;
+}
+/* Rows past the end of the data: no divider lines or hover. */
+.data-table .table-row-cell:empty,
+.data-table .table-row-cell:empty:hover {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.data-table .table-row-cell:hover {
+    -fx-background-color: #f9fafb;
+}
+.data-table .table-row-cell:selected {
+    -fx-background-color: -et-accent-subtle;
+}
+.data-table .table-row-cell:selected .table-cell,
+.data-table .table-row-cell:selected .cell-primary {
+    -fx-text-fill: -et-ink;
+}
+.data-table .table-cell {
+    -fx-border-color: transparent;
+    -fx-text-fill: -et-text;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 10 0 10;
+}
+.data-table .numeric-cell {
+    -fx-alignment: CENTER_RIGHT;
+}
+.data-table .column-header.numeric .label {
+    -fx-alignment: CENTER_RIGHT;
+}
+.cell-primary {
+    -fx-text-fill: -et-ink;
+    -fx-font-weight: bold;
+}
+.cell-secondary {
+    -fx-text-fill: -et-text-muted;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Status badges (soft pills, text always spelled out) ---------- */
+.status-badge {
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 999;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
     -fx-alignment: CENTER;
 }
-.status-badge.available     { -fx-background-color: #16a34a; }
-.status-badge.low-stock     { -fx-background-color: #d97706; }
-.status-badge.out-of-stock  { -fx-background-color: #dc2626; }
-.status-badge.discontinued  { -fx-background-color: #6b7280; }
+.status-badge.available     { -fx-background-color: -et-success-bg; -fx-text-fill: -et-success-fg; }
+.status-badge.low-stock     { -fx-background-color: -et-warning-bg; -fx-text-fill: -et-warning-fg; }
+.status-badge.out-of-stock  { -fx-background-color: -et-danger-bg;  -fx-text-fill: -et-danger-fg; }
+.status-badge.discontinued  { -fx-background-color: -et-neutral-bg; -fx-text-fill: -et-neutral-fg; }
 
-/* ---------- Dashboard KPI cards ---------- */
-.kpi-card {
-    -fx-background-color: white;
-    -fx-background-radius: 12;
-    -fx-border-color: #e2e8f0;
-    -fx-border-radius: 12;
-    -fx-border-width: 1;
-    -fx-padding: 16;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);
+/* ---------- Thumbnails ---------- */
+.thumb-placeholder {
+    -fx-background-color: #f3f4f6;
+    -fx-background-radius: 6;
 }
-.kpi-icon {
-    -fx-font-size: 22px;
+
+/* ---------- Icons drawn by Icons.styled(...) ---------- */
+.icon { -fx-fill: transparent; }
+.icon-muted   { -fx-stroke: #6b7280; }
+.icon-subtle  { -fx-stroke: #b6bcc6; }
+.icon-accent  { -fx-stroke: -et-accent; }
+.icon-success { -fx-stroke: #16a34a; }
+.icon-warning { -fx-stroke: #d97706; }
+.icon-danger  { -fx-stroke: #dc2626; }
+.icon-white   { -fx-stroke: white; }
+.icon-sidebar { -fx-stroke: #9ca3af; }
+
+/* ---------- Empty states ---------- */
+.empty-icon {
+    -fx-background-color: #f3f4f6;
+    -fx-background-radius: 999;
+    -fx-min-width: 48; -fx-min-height: 48;
+    -fx-max-width: 48; -fx-max-height: 48;
+}
+.empty-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -et-ink;
+}
+.empty-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: -et-text-muted;
+}
+
+/* ===================================================== 4. Screens */
+
+/* ---------- KPI cards ---------- */
+.kpi-card {
+    -fx-background-color: -et-surface;
+    -fx-background-radius: 12;
+    -fx-border-color: -et-border;
+    -fx-border-radius: 12;
+    -fx-padding: 16 18 16 16;
+}
+.kpi-chip {
+    -fx-background-radius: 10;
+}
+.kpi-chip-accent  { -fx-background-color: -et-accent-subtle; }
+.kpi-chip-success { -fx-background-color: #dcfce7; }
+.kpi-chip-warning { -fx-background-color: #fef3c7; }
+.kpi-chip-danger  { -fx-background-color: #fee2e2; }
+.kpi-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -et-text-muted;
 }
 .kpi-value {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
+    -fx-text-fill: -et-ink;
 }
-.kpi-label {
-    -fx-font-size: 12px;
-    -fx-opacity: 0.7;
+.kpi-detail {
+    -fx-font-size: 11px;
+    -fx-text-fill: -et-text-subtle;
 }
 
-/* ---------- Sidebar nav ---------- */
-.nav-sidebar {
-    -fx-background-color: #1e293b;
+/* ---------- Forms ---------- */
+.field-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
 }
-.nav-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: white;
-    -fx-alignment: CENTER_LEFT;
-    -fx-padding: 10 14 10 14;
+.field-hint {
+    -fx-font-size: 11px;
+    -fx-text-fill: -et-text-muted;
+}
+.text-input.invalid,
+.combo-box-base.invalid {
+    -fx-border-color: #dc2626;
+    -fx-border-radius: 6;
+}
+.form-error {
+    -fx-background-color: -et-danger-bg;
     -fx-background-radius: 8;
+    -fx-padding: 8 12 8 12;
+    -fx-text-fill: -et-danger-fg;
+    -fx-font-size: 12px;
+}
+.photo-drop {
+    -fx-background-color: #f9fafb;
+    -fx-background-radius: 12;
+    -fx-border-color: #d1d5db;
+    -fx-border-style: segments(6, 4);
+    -fx-border-radius: 12;
+}
+/* AtlantaFX caps dialog panes at 600px, which clipped the item form. */
+.dialog-pane.app-dialog {
+    -fx-max-width: 820px;
+}
+/* Plain alerts (text content) still need breathing room. */
+.app-dialog > .content.label {
+    -fx-padding: 18 20 10 20;
     -fx-font-size: 13px;
 }
-.nav-button:hover {
-    -fx-background-color: rgba(255,255,255,0.12);
-}
-.nav-button:pressed, .nav-button.active {
-    -fx-background-color: #2563eb;
-}
-
-/* ---------- Sidebar footer (signed-in user, change password, log out) ---------- */
-.nav-footer-label {
-    -fx-text-fill: #cbd5e1;
-    -fx-font-size: 11px;
-    -fx-padding: 0 0 0 4;
+.dialog-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -et-ink;
 }
 
-/* ---------- Login screen ---------- */
+/* ---------- Login ---------- */
 .login-root {
-    -fx-background-color: linear-gradient(to bottom right, #e0e7ff, #f8fafc);
+    -fx-background-color: linear-gradient(to bottom right, #eef2ff, #f8fafc 60%, #f5f3ff);
 }
 .login-card {
     -fx-background-color: white;
     -fx-background-radius: 16;
-    -fx-padding: 32;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 24, 0, 0, 6);
+    -fx-border-color: -et-border;
+    -fx-border-radius: 16;
+    -fx-padding: 32 32 28 32;
+    -fx-effect: dropshadow(gaussian, rgba(17, 24, 39, 0.10), 30, 0, 0, 10);
 }
 .login-title {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #0f172a;
+    -fx-text-fill: -et-ink;
 }
 .login-subtitle {
     -fx-font-size: 13px;
-    -fx-text-fill: #475569;
+    -fx-text-fill: #4b5563;
 }
 .login-hint {
     -fx-font-size: 11px;
-    -fx-text-fill: #64748b;
+    -fx-text-fill: -et-text-muted;
 }
 .login-error {
-    -fx-text-fill: #dc2626;
+    -fx-background-color: -et-danger-bg;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12 8 12;
+    -fx-text-fill: -et-danger-fg;
     -fx-font-size: 12px;
 }
-.login-button {
-    -fx-background-color: #2563eb;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-background-radius: 8;
-    -fx-padding: 9 16 9 16;
-}
-.login-button:hover {
-    -fx-background-color: #1d4ed8;
+.login-footer {
+    -fx-font-size: 11px;
+    -fx-text-fill: -et-text-subtle;
 }
 
 /* ---------- Sales calendar ---------- */
 .cal-header {
+    -fx-font-size: 11px;
     -fx-font-weight: bold;
-    -fx-text-fill: #475569;
+    -fx-text-fill: -et-text-muted;
     -fx-padding: 4 0 4 0;
 }
 .cal-cell {
     -fx-background-color: white;
     -fx-background-radius: 8;
-    -fx-border-color: #e2e8f0;
+    -fx-border-color: -et-border;
     -fx-border-radius: 8;
     -fx-padding: 8;
     -fx-cursor: hand;
 }
 .cal-cell:hover {
-    -fx-border-color: #2563eb;
+    -fx-border-color: -et-accent-muted;
+}
+.cal-cell:focused {
+    -fx-border-color: -et-accent;
+    -fx-border-width: 2;
 }
 .cal-cell-today {
-    -fx-border-color: #2563eb;
+    -fx-border-color: -et-accent;
     -fx-border-width: 2;
 }
 .cal-cell-outside {
@@ -132,17 +448,69 @@
 .cal-day-number {
     -fx-font-size: 12px;
     -fx-font-weight: bold;
-    -fx-text-fill: #334155;
+    -fx-text-fill: #374151;
+}
+.cal-cell-today .cal-day-number {
+    -fx-text-fill: -et-accent;
 }
 .cal-amount {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-text-fill: #0f172a;
+    -fx-text-fill: -et-ink;
 }
 .cal-orders {
     -fx-font-size: 11px;
-    -fx-text-fill: #475569;
+    -fx-text-fill: #4b5563;
 }
 
-/* ---------- Sales charts ---------- */
-.chart-bar { -fx-bar-fill: #2563eb; }
+/* ---------- Segmented toggle (Day / Week / Month) ---------- */
+.segmented {
+    -fx-background-color: #eceef1;
+    -fx-background-radius: 8;
+    -fx-padding: 3;
+}
+.segmented .toggle-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-border-color: transparent;
+    -fx-text-fill: #4b5563;
+    -fx-padding: 5 14 5 14;
+    -fx-effect: null;
+}
+.segmented .toggle-button:selected {
+    -fx-background-color: white;
+    -fx-text-fill: -et-ink;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.12), 3, 0, 0, 1);
+}
+
+/* ---------- Charts ---------- */
+.chart-bar,
+.default-color0.chart-bar { -fx-bar-fill: -et-accent; -fx-background-radius: 4 4 0 0; }
+.chart-plot-background { -fx-background-color: transparent; }
+.chart-vertical-grid-lines { -fx-stroke: transparent; }
+.chart-horizontal-grid-lines { -fx-stroke: #eef0f3; }
+
+/* ---------- Checkout ---------- */
+.summary-row .label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #4b5563;
+}
+.total-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -et-ink;
+}
+.total-value {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -et-ink;
+}
+.divider {
+    -fx-background-color: -et-border;
+    -fx-min-height: 1; -fx-max-height: 1; -fx-pref-height: 1;
+}
+.kbd-hint {
+    -fx-font-size: 11px;
+    -fx-text-fill: -et-text-subtle;
+}
