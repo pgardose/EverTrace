@@ -49,11 +49,7 @@ public class CheckoutView extends BorderPane {
         Button addToCartBtn = new Button("Add to Cart →");
         addToCartBtn.setOnAction(e -> onAddToCart());
 
-<<<<<<< HEAD
         VBox catalogBox = new VBox(8, new Label("Available Items"), catalogTable, addToCartBtn);
-=======
-        VBox catalogBox = new VBox(8, new Label("Available Items (click a photo to enlarge)"), catalogTable, addToCartBtn);
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 
         customerNameField.setPromptText("Customer name (optional)");
         Button checkoutBtn = new Button("Confirm Sale");
@@ -90,51 +86,25 @@ public class CheckoutView extends BorderPane {
         photoCol.setCellValueFactory(new PropertyValueFactory<>("imagePath"));
         photoCol.setCellFactory(col -> new ThumbnailCell<>());
         photoCol.setSortable(false);
-<<<<<<< HEAD
         photoCol.setPrefWidth(60);
 
         TableColumn<Item, String> nameCol = new TableColumn<>("Item");
-=======
-        photoCol.setPrefWidth(70);
-
-        TableColumn<Item, String> codeCol = new TableColumn<>("Code");
-        codeCol.setCellValueFactory(new PropertyValueFactory<>("sku"));
-        TableColumn<Item, String> nameCol = new TableColumn<>("Brand");
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         TableColumn<Item, Number> priceCol = new TableColumn<>("Price");
         priceCol.setCellValueFactory(new PropertyValueFactory<>("price"));
         TableColumn<Item, Number> qtyCol = new TableColumn<>("In Stock");
         qtyCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-<<<<<<< HEAD
         catalogTable.getColumns().setAll(List.of(photoCol, nameCol, priceCol, qtyCol));
         catalogTable.setPrefHeight(400);
         catalogTable.setRowFactory(tv -> {
             javafx.scene.control.TableRow<Item> row = new javafx.scene.control.TableRow<>();
             row.setPrefHeight(48);
-=======
-        catalogTable.getColumns().setAll(List.of(photoCol, codeCol, nameCol, priceCol, qtyCol));
-        catalogTable.setPrefHeight(400);
-        catalogTable.setRowFactory(tv -> {
-            javafx.scene.control.TableRow<Item> row = new javafx.scene.control.TableRow<>();
-            row.setPrefHeight(56);
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
             return row;
         });
     }
 
     private void buildCartTable() {
-<<<<<<< HEAD
         TableColumn<CartLine, String> nameCol = new TableColumn<>("Item");
-=======
-        TableColumn<CartLine, String> photoCol = new TableColumn<>("Photo");
-        photoCol.setCellValueFactory(new PropertyValueFactory<>("imagePath"));
-        photoCol.setCellFactory(col -> new ThumbnailCell<>());
-        photoCol.setSortable(false);
-        photoCol.setPrefWidth(70);
-
-        TableColumn<CartLine, String> nameCol = new TableColumn<>("Brand");
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         nameCol.setCellValueFactory(new PropertyValueFactory<>("itemName"));
 
         TableColumn<CartLine, Integer> qtyCol = new TableColumn<>("Qty");
@@ -165,20 +135,9 @@ public class CheckoutView extends BorderPane {
                 new javafx.beans.property.SimpleDoubleProperty(cell.getValue().getLineTotal()));
 
         cartTable.setEditable(true);
-<<<<<<< HEAD
         cartTable.getColumns().setAll(List.of(nameCol, qtyCol, lineTotalCol));
         cartTable.setItems(cartData);
         cartTable.setPrefHeight(360);
-=======
-        cartTable.getColumns().setAll(List.of(photoCol, nameCol, qtyCol, lineTotalCol));
-        cartTable.setItems(cartData);
-        cartTable.setPrefHeight(360);
-        cartTable.setRowFactory(tv -> {
-            javafx.scene.control.TableRow<CartLine> row = new javafx.scene.control.TableRow<>();
-            row.setPrefHeight(56);
-            return row;
-        });
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     }
 
     private void onAddToCart() {

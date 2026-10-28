@@ -28,7 +28,6 @@ public class ItemDao implements GenericDao<Item, Integer> {
         }
     }
 
-<<<<<<< HEAD
     @Override
     public List<Item> findAll() {
         String sql = """
@@ -37,20 +36,6 @@ public class ItemDao implements GenericDao<Item, Integer> {
             WHERE i.archived = 0
             ORDER BY i.name
             """;
-=======
-    /** Items currently in inventory (sold-out items removed by a sale are not included). */
-    @Override
-    public List<Item> findAll() {
-        return findAll(false);
-    }
-
-    /** @param includeRemoved true also returns items taken out of inventory by a sale (used to keep codes unique). */
-    public List<Item> findAll(boolean includeRemoved) {
-        String sql = """
-            SELECT i.*, c.name AS category_name FROM items i
-            LEFT JOIN categories c ON i.category_id = c.category_id
-            """ + (includeRemoved ? "" : "WHERE i.removed = 0 ") + "ORDER BY i.name";
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         List<Item> items = new ArrayList<>();
         try (Statement stmt = DatabaseManager.getConnection().createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -63,11 +48,7 @@ public class ItemDao implements GenericDao<Item, Integer> {
         return items;
     }
 
-<<<<<<< HEAD
     /** Items at or below their reorder threshold -- feeds the dashboard's low-stock panel. */
-=======
-    /** Items at or below the low-stock level -- feeds the dashboard's low-stock panel. */
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     public List<Item> findLowStock() {
         return findAll().stream()
                 .filter(i -> i.getStatus() == ItemStatus.LOW_STOCK || i.getStatus() == ItemStatus.OUT_OF_STOCK)
@@ -82,7 +63,6 @@ public class ItemDao implements GenericDao<Item, Integer> {
     private Item insert(Item item) {
         String sql = """
             INSERT INTO items (sku, name, category_id, size, color, price, quantity,
-<<<<<<< HEAD
                                 reorder_threshold, status, date_added, image_path)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
@@ -91,20 +71,6 @@ public class ItemDao implements GenericDao<Item, Integer> {
             bindItem(ps, item);
             ps.executeUpdate();
             item.setItemId(DatabaseManager.lastInsertId());
-=======
-                                status, date_added, image_path, removed)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """;
-        try (PreparedStatement ps = DatabaseManager.getConnection()
-                .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            bindItem(ps, item);
-            ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    item.setItemId(keys.getInt(1));
-                }
-            }
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
             return item;
         } catch (SQLException e) {
             throw new DataAccessException("Failed to insert item " + item.getName(), e);
@@ -114,11 +80,7 @@ public class ItemDao implements GenericDao<Item, Integer> {
     private Item update(Item item) {
         String sql = """
             UPDATE items SET sku=?, name=?, category_id=?, size=?, color=?, price=?,
-<<<<<<< HEAD
                               quantity=?, reorder_threshold=?, status=?, date_added=?, image_path=?
-=======
-                              quantity=?, status=?, date_added=?, image_path=?, removed=?
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
             WHERE item_id=?
             """;
         try (PreparedStatement ps = DatabaseManager.getConnection().prepareStatement(sql)) {
@@ -137,20 +99,11 @@ public class ItemDao implements GenericDao<Item, Integer> {
      * so the quantity update and the audit row never drift apart.
      */
     public void updateQuantityAndStatus(Connection conn, Item item) throws SQLException {
-<<<<<<< HEAD
         String sql = "UPDATE items SET quantity = ?, status = ? WHERE item_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, item.getQuantity());
             ps.setString(2, item.getStatus().name());
             ps.setInt(3, item.getItemId());
-=======
-        String sql = "UPDATE items SET quantity = ?, status = ?, removed = ? WHERE item_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, item.getQuantity());
-            ps.setString(2, item.getStatus().name());
-            ps.setInt(3, item.isRemoved() ? 1 : 0);
-            ps.setInt(4, item.getItemId());
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
             ps.executeUpdate();
         }
     }
@@ -166,7 +119,6 @@ public class ItemDao implements GenericDao<Item, Integer> {
         }
     }
 
-<<<<<<< HEAD
     /**
      * True if any order line or stock-history row points at this item. Such an
      * item can't be hard-deleted (the foreign keys protect the sales records),
@@ -199,8 +151,6 @@ public class ItemDao implements GenericDao<Item, Integer> {
         }
     }
 
-=======
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     private void bindItem(PreparedStatement ps, Item item) throws SQLException {
         ps.setString(1, item.getSku());
         ps.setString(2, item.getName());
@@ -209,17 +159,10 @@ public class ItemDao implements GenericDao<Item, Integer> {
         ps.setString(5, item.getColor());
         ps.setDouble(6, item.getPrice());
         ps.setInt(7, item.getQuantity());
-<<<<<<< HEAD
         ps.setInt(8, item.getReorderThreshold());
         ps.setString(9, item.getStatus().name());
         ps.setString(10, item.getDateAdded().toString());
         ps.setString(11, item.getImagePath());
-=======
-        ps.setString(8, item.getStatus().name());
-        ps.setString(9, item.getDateAdded().toString());
-        ps.setString(10, item.getImagePath());
-        ps.setInt(11, item.isRemoved() ? 1 : 0);
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     }
 
     private Item mapRow(ResultSet rs) throws SQLException {
@@ -232,17 +175,10 @@ public class ItemDao implements GenericDao<Item, Integer> {
         item.setSize(rs.getString("size"));
         item.setColor(rs.getString("color"));
         item.setPrice(rs.getDouble("price"));
-<<<<<<< HEAD
         item.setReorderThreshold(rs.getInt("reorder_threshold"));
         item.setQuantity(rs.getInt("quantity"));
         item.setStatus(ItemStatus.valueOf(rs.getString("status")));
         item.setImagePath(rs.getString("image_path"));
-=======
-        item.setQuantity(rs.getInt("quantity"));
-        item.setStatus(ItemStatus.valueOf(rs.getString("status")));
-        item.setImagePath(rs.getString("image_path"));
-        item.setRemoved(rs.getInt("removed") == 1);
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         String dateStr = rs.getString("date_added");
         item.setDateAdded(dateStr != null ? LocalDate.parse(dateStr) : LocalDate.now());
         return item;

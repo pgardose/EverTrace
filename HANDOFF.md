@@ -43,7 +43,6 @@ Ikonli's icon constants (e.g. `Material2AL.SOMETHING`) couldn't be verified agai
 
 Both are in `pom.xml` as requested, but I didn't retrofit existing model classes with Lombok annotations (risk of touching many already-tested files for a cosmetic change I couldn't compile-verify against a real Lombok annotation processor here) or implement receipt PDF generation with OpenPDF (a genuinely new feature, out of scope for this pass). Both are reasonable next steps -- OpenPDF receipt printing in particular pairs naturally with `OrderService.checkout()`'s return value.
 
-<<<<<<< HEAD
 ## Pass 5 additions (delete fix, login, sales calendar)
 
 **Delete bug (root cause + fix).** Deleting an item failed whenever it had any `stock_transactions` or `order_items` row (foreign keys are ON); images were irrelevant. `InventoryService.removeItem()` now archives items that have history (`items.archived = 1`, hidden from the inventory list and dashboard, row and image kept so old orders still resolve) and hard-deletes (plus deletes the image file) items that never had history. `ItemDao.findById` deliberately ignores `archived` so cancelling an old order still restocks the item. Existing databases are upgraded on startup by `DatabaseManager.addColumnIfMissing`.
@@ -62,8 +61,6 @@ Both are in `pom.xml` as requested, but I didn't retrofit existing model classes
 - Number keys don't type in JavaFX windows only (other apps fine). Unresolved; `KeyTest.java` was given to the user, no result yet.
 - Some files red in IntelliJ with JDK 25: waiting on Build output (likely Maven reimport / language level).
 
-=======
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 ## Still not tested end-to-end
 
 - Actually running `mvn clean javafx:run` on a real machine and eyeballing the AtlantaFX theme, badges, and KPI cards render as intended (compile/wiring is verified; visual appearance is not, since this sandbox has no real display and an incomplete AtlantaFX CSS build)
@@ -72,56 +69,23 @@ Both are in `pom.xml` as requested, but I didn't retrofit existing model classes
 
 ## Known gaps still open
 
-<<<<<<< HEAD
 0. Login is a single owner account: no roles or user management; lockout is in memory only.
 1. Single shared `Connection`, no pooling -- fine for one user, not for concurrent access.
 2. No backup/export option for `inventory.db` or `images/`.
 3. Currency symbol (₱) hardcoded.
 4. Archived items keep their SKU (UNIQUE), so that SKU can't be reused; there is no UI to restore archived items.
-=======
-1. Single shared `Connection`, no pooling -- fine for one user, not for concurrent access.
-2. No backup/export option for `inventory.db` or `images/`.
-3. Currency symbol (₱) hardcoded.
-4. Deleting an item referenced by an order fails on the FK constraint (by design, but no "archive instead" option).
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 5. Picked images aren't resized/compressed before copying.
 6. Ikonli icons, Lombok annotations, and OpenPDF receipts are scaffolded (dependency present) but not implemented -- see Pass 4 notes above.
 
 ## Where things live (quick map)
 
 ```
-<<<<<<< HEAD
 model/    → User, PeriodSales, Item, Category, Order, OrderItem, ItemStatus (enum), StockSummary/OrderLineRequest (records)
 dao/      → JDBC access; ItemDao, OrderDao, CategoryDao, StockTransactionDao, DatabaseManager
 service/  → AuthService, SalesService, InventoryService (CRUD + restock + dashboard stats), OrderService (checkout + cancellation)
-=======
-model/    → Item, Category, Order, OrderItem, ItemStatus (enum), StockSummary/OrderLineRequest (records)
-dao/      → JDBC access; ItemDao, OrderDao, CategoryDao, StockTransactionDao, DatabaseManager
-service/  → InventoryService (CRUD + restock + dashboard stats), OrderService (checkout + cancellation)
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 ui/       → DashboardView, InventoryView, CheckoutView, OrdersView, ItemFormDialog, CategoryManagerDialog,
             CartLine, ThumbnailCell, StatusBadgeCell
 util/     → ImageStorage (copies picked photos into images/)
 resources/→ schema.sql, styles.css (badges + KPI cards + nav sidebar)
-<<<<<<< HEAD
 App.java  → login -> main window wiring, applies AtlantaFX theme
 ```
-=======
-App.java  → wires it all together, applies AtlantaFX theme, no login/setup screen by design
-```
-
-## Pass 5 (client feedback round: Evertrace)
-
-**Not compiled:** Maven Central was unreachable from the sandbox for this pass, so the JavaFX UI code was written and reviewed by hand, not built. Pure-Java classes (models, `SalesDao`, `OrderDao`, `DatabaseManager`) were compiled with `javac`, and every SQL statement was run against SQLite. **Run `mvn clean javafx:run` first.**
-
-- **`pom.xml` fix:** two XML comments contained `--`, which is illegal XML, so Maven refused to read the POM at all. Fixed.
-- **Sold items leave inventory:** a confirmed sale that takes quantity to 0 sets `items.removed = 1`; Inventory/Dashboard no longer list it. Restock or cancelling the order clears the flag. Row is kept (order history needs it). Migration adds the column and back-fills already-sold-out items.
-- **Labels:** "Name" -> **Brand**, "SKU" -> **Code** everywhere in the UI (DB columns `name`/`sku` unchanged on purpose, so existing `inventory.db` files keep working).
-- **Reorder threshold removed:** field, model property and DAO binding gone; low stock is now a fixed level, `ItemStatus.LOW_STOCK_LEVEL` (5). The old DB column is left in place (it has a default, so inserts still work).
-- **Photos:** thumbnails on Dashboard, Inventory, Checkout catalog and Cart; click any thumbnail to open it large (`PhotoViewer`).
-- **Dashboard:** Total Items (units in stock + product count), Inventory Value, Low/Out of Stock, Total Revenue Earned, Total Items Sold.
-- **Sales screen (new):** calendar marking every date with sales (click a date to see what sold), records of sale per month, total revenue / items sold. Only COMPLETED orders count.
-- **Bug fixed:** `OrderDao.findAll()` never read `order_date` (every order showed "now"); it is parsed now and shown on the Orders screen.
-- **Lombok removed from `pom.xml`:** it was unused and 1.18.32 crashes javac on newer JDKs (`TypeTag :: UNKNOWN`).
-- **`Launcher` main class added** and set as `main.class`/`exec.mainClass` in `pom.xml`, so NetBeans' Run button and the shaded jar start without "JavaFX runtime components are missing".
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823

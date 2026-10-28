@@ -21,27 +21,15 @@ public class Item implements Sellable {
     private final StringProperty color = new SimpleStringProperty();
     private final DoubleProperty price = new SimpleDoubleProperty();
     private final IntegerProperty quantity = new SimpleIntegerProperty();
-<<<<<<< HEAD
     private final IntegerProperty reorderThreshold = new SimpleIntegerProperty(5);
     private final ObjectProperty<ItemStatus> status = new SimpleObjectProperty<>(ItemStatus.OUT_OF_STOCK);
     private final ObjectProperty<LocalDate> dateAdded = new SimpleObjectProperty<>(LocalDate.now());
     private final StringProperty imagePath = new SimpleStringProperty();
-=======
-    private final ObjectProperty<ItemStatus> status = new SimpleObjectProperty<>(ItemStatus.OUT_OF_STOCK);
-    private final ObjectProperty<LocalDate> dateAdded = new SimpleObjectProperty<>(LocalDate.now());
-    private final StringProperty imagePath = new SimpleStringProperty();
-    /** True once a sale takes the last unit: the item no longer shows in Inventory (it stays on record for order history). */
-    private final BooleanProperty removed = new SimpleBooleanProperty(false);
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 
     public Item() {}
 
     public Item(String sku, String name, int categoryId, String size, String color,
-<<<<<<< HEAD
                 double price, int quantity, int reorderThreshold) {
-=======
-                double price, int quantity) {
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         this.sku.set(sku);
         this.name.set(name);
         this.categoryId.set(categoryId);
@@ -49,12 +37,8 @@ public class Item implements Sellable {
         this.color.set(color);
         this.price.set(price);
         this.quantity.set(quantity);
-<<<<<<< HEAD
         this.reorderThreshold.set(reorderThreshold);
         this.status.set(ItemStatus.fromQuantity(quantity, reorderThreshold));
-=======
-        this.status.set(ItemStatus.fromQuantity(quantity));
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     }
 
     @Override
@@ -71,32 +55,17 @@ public class Item implements Sellable {
         }
         quantity.set(quantity.get() - qty);
         refreshStatus();
-<<<<<<< HEAD
-=======
-        // Sold out after a confirmed sale -> take it out of the inventory list.
-        if (quantity.get() == 0) {
-            removed.set(true);
-        }
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     }
 
     @Override
     public void restock(int qty) {
         quantity.set(quantity.get() + qty);
         refreshStatus();
-<<<<<<< HEAD
-=======
-        removed.set(false); // restocked or a sale was cancelled -> back in inventory
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     }
 
     private void refreshStatus() {
         if (status.get() != ItemStatus.DISCONTINUED) {
-<<<<<<< HEAD
             status.set(ItemStatus.fromQuantity(quantity.get(), reorderThreshold.get()));
-=======
-            status.set(ItemStatus.fromQuantity(quantity.get()));
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         }
     }
 
@@ -138,13 +107,10 @@ public class Item implements Sellable {
     public void setQuantity(int v) { quantity.set(v); refreshStatus(); }
     public IntegerProperty quantityProperty() { return quantity; }
 
-<<<<<<< HEAD
     public int getReorderThreshold() { return reorderThreshold.get(); }
     public void setReorderThreshold(int v) { reorderThreshold.set(v); refreshStatus(); }
     public IntegerProperty reorderThresholdProperty() { return reorderThreshold; }
 
-=======
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     public ItemStatus getStatus() { return status.get(); }
     public void setStatus(ItemStatus v) { status.set(v); }
     public ObjectProperty<ItemStatus> statusProperty() { return status; }
@@ -156,11 +122,4 @@ public class Item implements Sellable {
     public String getImagePath() { return imagePath.get(); }
     public void setImagePath(String v) { imagePath.set(v); }
     public StringProperty imagePathProperty() { return imagePath; }
-<<<<<<< HEAD
-=======
-
-    public boolean isRemoved() { return removed.get(); }
-    public void setRemoved(boolean v) { removed.set(v); }
-    public BooleanProperty removedProperty() { return removed; }
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 }

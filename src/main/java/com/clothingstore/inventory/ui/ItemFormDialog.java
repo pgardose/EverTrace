@@ -36,11 +36,7 @@ public class ItemFormDialog extends Dialog<Item> {
 
     /**
      * @param existingItems current inventory, used only to compute the next
-<<<<<<< HEAD
      *                       sequence number when auto-generating a SKU for a
-=======
-     *                       sequence number when auto-generating a code for a
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
      *                       brand-new item. Pass an empty list when editing --
      *                       auto-generation never runs in edit mode.
      */
@@ -55,14 +51,9 @@ public class ItemFormDialog extends Dialog<Item> {
         TextField colorField = new TextField(existing != null ? existing.getColor() : "");
         TextField priceField = new TextField(existing != null ? String.valueOf(existing.getPrice()) : "");
         TextField quantityField = new TextField(existing != null ? String.valueOf(existing.getQuantity()) : "0");
-<<<<<<< HEAD
         TextField reorderField = new TextField(existing != null ? String.valueOf(existing.getReorderThreshold()) : "5");
 
         // --- SKU auto-generation (new items only) ---
-=======
-
-        // --- code auto-generation (new items only) ---
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         // Regenerates the SKU from category/color/size UNTIL the user types into
         // the SKU field themselves -- after that, we assume they want manual control
         // and stop overwriting what they typed.
@@ -128,22 +119,14 @@ public class ItemFormDialog extends Dialog<Item> {
         grid.setVgap(10);
         grid.setPadding(new Insets(16));
         int r = 0;
-<<<<<<< HEAD
         grid.addRow(r++, new Label("SKU:"), skuField);
         grid.addRow(r++, new Label("Name:"), nameField);
-=======
-        grid.addRow(r++, new Label("Code:"), skuField);
-        grid.addRow(r++, new Label("Brand:"), nameField);
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         grid.addRow(r++, new Label("Category:"), categoryBox);
         grid.addRow(r++, new Label("Size:"), sizeField);
         grid.addRow(r++, new Label("Color:"), colorField);
         grid.addRow(r++, new Label("Price:"), priceField);
         grid.addRow(r++, new Label("Quantity:"), quantityField);
-<<<<<<< HEAD
         grid.addRow(r++, new Label("Reorder Threshold:"), reorderField);
-=======
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         grid.addRow(r++, new Label("Photo:"), imageBox);
         grid.add(errorLabel, 0, r, 2, 1);
 
@@ -155,11 +138,7 @@ public class ItemFormDialog extends Dialog<Item> {
         // instead of letting bad data reach the database and fail there with a raw exception.
         Button saveButton = (Button) getDialogPane().lookupButton(saveButtonType);
         saveButton.addEventFilter(ActionEvent.ACTION, event -> {
-<<<<<<< HEAD
             List<String> errors = validate(skuField, nameField, categoryBox, priceField, quantityField, reorderField);
-=======
-            List<String> errors = validate(skuField, nameField, categoryBox, priceField, quantityField);
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
             if (!errors.isEmpty()) {
                 errorLabel.setText(String.join(" \u2022 ", errors));
                 event.consume();
@@ -177,10 +156,7 @@ public class ItemFormDialog extends Dialog<Item> {
             item.setSize(sizeField.getText().trim());
             item.setColor(colorField.getText().trim());
             item.setPrice(Double.parseDouble(priceField.getText().trim()));
-<<<<<<< HEAD
             item.setReorderThreshold(Integer.parseInt(reorderField.getText().trim()));
-=======
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
             item.setQuantity(Integer.parseInt(quantityField.getText().trim()));
             if (existing == null) {
                 item.setDateAdded(LocalDate.now());
@@ -198,11 +174,7 @@ public class ItemFormDialog extends Dialog<Item> {
     }
 
     /**
-<<<<<<< HEAD
      * Builds a SKU like "TOP-BLA-M-001": first 3 letters of category + first 3
-=======
-     * Builds a code like "TOP-BLA-M-001": first 3 letters of category + first 3
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
      * letters of color + size, uppercased, plus a 3-digit sequence number based
      * on how many existing items already share that exact combination.
      * <p>
@@ -245,7 +217,6 @@ public class ItemFormDialog extends Dialog<Item> {
      * on the first failure) so the user sees every problem in one pass.
      */
     private List<String> validate(TextField skuField, TextField nameField, ComboBox<Category> categoryBox,
-<<<<<<< HEAD
                                    TextField priceField, TextField quantityField, TextField reorderField) {
         List<String> errors = new ArrayList<>();
 
@@ -254,16 +225,6 @@ public class ItemFormDialog extends Dialog<Item> {
         }
         if (nameField.getText() == null || nameField.getText().isBlank()) {
             errors.add("Name is required");
-=======
-                                   TextField priceField, TextField quantityField) {
-        List<String> errors = new ArrayList<>();
-
-        if (skuField.getText() == null || skuField.getText().isBlank()) {
-            errors.add("Code is required");
-        }
-        if (nameField.getText() == null || nameField.getText().isBlank()) {
-            errors.add("Brand is required");
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         }
         if (categoryBox.getValue() == null) {
             errors.add("Category is required");
@@ -271,10 +232,7 @@ public class ItemFormDialog extends Dialog<Item> {
 
         errors.addAll(checkNonNegativeNumber(priceField.getText(), "Price"));
         errors.addAll(checkNonNegativeInteger(quantityField.getText(), "Quantity"));
-<<<<<<< HEAD
         errors.addAll(checkNonNegativeInteger(reorderField.getText(), "Reorder threshold"));
-=======
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 
         return errors;
     }

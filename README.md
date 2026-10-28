@@ -19,7 +19,6 @@ even if two windows are open at once.
 - Maven 3.8+
 - Internet access the first time you build (Maven downloads JavaFX + the SQLite driver)
 
-<<<<<<< HEAD
 ## Login and sales
 
 On first launch the app asks you to create the owner account (username + password, 8+ characters with a letter and a number). After that it opens on a sign-in screen. "Change password" and "Log out" are at the bottom of the sidebar. If you forget the password, delete the `users` row in `inventory.db` (or the whole file for a fresh start) to get the setup screen again.
@@ -28,8 +27,6 @@ The **Sales** screen shows sales per day, week or month as a calendar; click a d
 
 Removing an item that has been sold or restocked archives it (hidden, history kept) instead of deleting it.
 
-=======
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
 ## Run it during development
 
 ```bash

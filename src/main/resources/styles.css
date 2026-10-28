@@ -33,19 +33,11 @@
     -fx-font-size: 22px;
 }
 .kpi-value {
-<<<<<<< HEAD
     -fx-font-size: 22px;
     -fx-font-weight: bold;
 }
 .kpi-label {
     -fx-font-size: 12px;
-=======
-    -fx-font-size: 26px;
-    -fx-font-weight: bold;
-}
-.kpi-label {
-    -fx-font-size: 13px;
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     -fx-opacity: 0.7;
 }
 
@@ -68,7 +60,6 @@
     -fx-background-color: #2563eb;
 }
 
-<<<<<<< HEAD
 /* ---------- Sidebar footer (signed-in user, change password, log out) ---------- */
 .nav-footer-label {
     -fx-text-fill: #cbd5e1;
@@ -121,20 +112,10 @@
     -fx-padding: 4 0 4 0;
 }
 .cal-cell {
-=======
-/* ---------- Sales calendar ---------- */
-.cal-head {
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-opacity: 0.6;
-}
-.cal-day {
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     -fx-background-color: white;
     -fx-background-radius: 8;
     -fx-border-color: #e2e8f0;
     -fx-border-radius: 8;
-<<<<<<< HEAD
     -fx-padding: 8;
     -fx-cursor: hand;
 }
@@ -165,37 +146,3 @@
 
 /* ---------- Sales charts ---------- */
 .chart-bar { -fx-bar-fill: #2563eb; }
-=======
-    -fx-padding: 6;
-    -fx-cursor: hand;
-}
-.cal-day:hover {
-    -fx-border-color: #2563eb;
-}
-.cal-day.has-sales {
-    -fx-background-color: #dcfce7;
-    -fx-border-color: #86efac;
-}
-.cal-day.today {
-    -fx-border-color: #2563eb;
-    -fx-border-width: 2;
-}
-.cal-day.selected {
-    -fx-background-color: #2563eb;
-    -fx-border-color: #1d4ed8;
-}
-.cal-day.selected .label {
-    -fx-text-fill: white;
-}
-.cal-day-number {
-    -fx-font-weight: bold;
-    -fx-font-size: 13px;
-}
-.cal-day-sold {
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-}
-.cal-day-revenue {
-    -fx-font-size: 10px;
-}
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823

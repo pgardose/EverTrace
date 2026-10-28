@@ -7,6 +7,7 @@ import com.clothingstore.inventory.dao.StockTransactionDao;
 import com.clothingstore.inventory.model.Item;
 import com.clothingstore.inventory.model.ItemStatus;
 import com.clothingstore.inventory.model.StockSummary;
+import com.clothingstore.inventory.util.ImageStorage;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -27,14 +28,6 @@ public class InventoryService {
         return itemDao.findAll();
     }
 
-<<<<<<< HEAD
-=======
-    /** Includes items removed by a sale -- only needed so generated item codes never collide with them. */
-    public List<Item> getAllItemsIncludingRemoved() {
-        return itemDao.findAll(true);
-    }
-
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     public List<Item> getLowStockItems() {
         return itemDao.findLowStock();
     }
@@ -44,11 +37,7 @@ public class InventoryService {
     }
 
     public Item addItem(Item item) {
-<<<<<<< HEAD
         item.setStatus(ItemStatus.fromQuantity(item.getQuantity(), item.getReorderThreshold()));
-=======
-        item.setStatus(ItemStatus.fromQuantity(item.getQuantity()));
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
         return itemDao.save(item);
     }
 
@@ -56,8 +45,23 @@ public class InventoryService {
         return itemDao.save(item);
     }
 
-    public void removeItem(int id) {
-        itemDao.deleteById(id);
+    /** What actually happened when the user asked to remove an item. */
+    public enum RemoveResult { DELETED, ARCHIVED }
+
+    /**
+     * Removes an item. If it has never been sold or restocked it is deleted
+     * outright (and its photo file removed). If it has history, deleting would
+     * break past orders, so it is archived instead: hidden everywhere in the
+     * app but still there for old orders and the audit trail.
+     */
+    public RemoveResult removeItem(Item item) {
+        if (itemDao.hasHistory(item.getItemId())) {
+            itemDao.archive(item.getItemId());
+            return RemoveResult.ARCHIVED;
+        }
+        itemDao.deleteById(item.getItemId());
+        ImageStorage.delete(item.getImagePath());
+        return RemoveResult.DELETED;
     }
 
     /**
@@ -89,10 +93,6 @@ public class InventoryService {
         List<Item> items = itemDao.findAll();
         return new StockSummary(
                 items.size(),
-<<<<<<< HEAD
-=======
-                items.stream().mapToInt(Item::getQuantity).sum(),
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
                 (int) items.stream().filter(i -> i.getStatus() == ItemStatus.LOW_STOCK).count(),
                 (int) items.stream().filter(i -> i.getStatus() == ItemStatus.OUT_OF_STOCK).count(),
                 items.stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum()

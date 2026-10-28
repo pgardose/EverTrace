@@ -20,10 +20,6 @@ public class CartLine {
 
     public Item getItem() { return item; }
     public String getItemName() { return item.getName(); }
-<<<<<<< HEAD
-=======
-    public String getImagePath() { return item.getImagePath(); }
->>>>>>> 1fad3874ce4da0e34b3cc67029bd87899e5d4823
     public double getUnitPrice() { return item.getPrice(); }
 
     public int getQuantity() { return quantity.get(); }
